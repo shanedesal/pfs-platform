@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { authFetch } from "@/lib/api";
 import type { DashboardStats } from "@/lib/admin";
-import AdminStatCard from "@/components/admin-stat-card";
+import AdminStatCard from "@/components/admin/stat-card";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);

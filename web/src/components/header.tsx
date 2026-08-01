@@ -2,10 +2,10 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Search, ShoppingCart, User, LogOut } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
 import HeaderSearch from "./header-search";
+import Logo from "./logo";
 import { useAuth } from "@/lib/auth-context";
 
 function SearchFallback() {
@@ -29,8 +29,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate/10 bg-paper/80 backdrop-blur-md dark:bg-ink/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-        <Link href="/" className="relative h-9 w-24 sm:h-10 sm:w-28">
-          <Image src="/logo.svg" alt="PFS" fill className="object-contain" />
+        <Link href="/">
+          <Logo />
         </Link>
 
         <Suspense fallback={<SearchFallback />}>

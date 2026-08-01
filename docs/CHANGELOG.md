@@ -4,11 +4,17 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-01 — Homepage footer contact + social links
+
+- **Doc:** `docs/homepage-footer.md`
+- **What changed:** Expanded the homepage footer with a Contact column (dummy email/phone/address) and a Follow us column (dummy Facebook/Instagram/X/LinkedIn links), keeping the existing copyright + Help/Terms/Privacy row. Added small inline SVG brand icons since `lucide-react` doesn't ship trademarked social logos.
+- **Files:** `web/src/components/footer.tsx`, `web/src/components/social-icons.tsx`, `docs/homepage-footer.md`
+
 ## 2026-08-01 — Admin dashboard overview
 
 - **Doc:** `docs/admin-dashboard.md`
-- **What changed:** Overhauled the placeholder `/admin` page into a dashboard with six summary cards (Total Products, Total Orders, Pending Orders, Completed Orders, Total Customers, Total Sales). Added admin-only `GET /api/admin/dashboard-stats` returning product and customer counts; order/sales cards are placeholders pending an orders data model. Admin layout now has a minimal top bar (same `/logo.svg` as the storefront header, "Admin" badge, back to store, theme toggle, logout) using the same fonts/colors as the storefront.
-- **Files:** `server/src/controllers/admin.controller.ts`, `server/src/routes/admin.ts`, `server/src/index.ts`, `web/src/app/admin/page.tsx`, `web/src/app/admin/layout.tsx`, `web/src/components/admin-stat-card.tsx`, `web/src/lib/admin.ts`, `docs/admin-dashboard.md`
+- **What changed:** Overhauled the placeholder `/admin` page into a dashboard with six summary cards (Total Products, Total Orders, Pending Orders, Completed Orders, Total Customers, Total Sales). Added admin-only `GET /api/admin/dashboard-stats` returning product and customer counts; order/sales cards are placeholders pending an orders data model. Admin chrome now lives in a dedicated `admin/header.tsx` component (logo, "Admin" badge, back to store, theme toggle, logout), keeping `admin/layout.tsx` limited to the auth/role guard; extracted a shared `Logo` component reused by both the storefront `Header` and `admin/header.tsx`. Admin-only components live under `web/src/components/admin/` (separate from shared/storefront components) to keep the components folder from getting mixed.
+- **Files:** `server/src/controllers/admin.controller.ts`, `server/src/routes/admin.ts`, `server/src/index.ts`, `web/src/app/admin/page.tsx`, `web/src/app/admin/layout.tsx`, `web/src/components/admin/header.tsx`, `web/src/components/admin/stat-card.tsx`, `web/src/components/logo.tsx`, `web/src/components/header.tsx`, `web/src/lib/admin.ts`, `docs/admin-dashboard.md`
 
 ## 2026-08-01 — Product cover images + gallery model
 
