@@ -3,11 +3,20 @@
 import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
 
+function setCookie(name: string, value: string, days = 365) {
+  document.cookie = `${name}=${value}; path=/; max-age=${days * 24 * 60 * 60}; SameSite=Lax`;
+}
+
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? match[2] : null;
+}
+
 export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("pfs-theme");
+    const stored = getCookie("pfs-theme");
     const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)",
     ).matches;
@@ -20,7 +29,7 @@ export default function ThemeToggle() {
     const next = !isDark;
     setIsDark(next);
     document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("pfs-theme", next ? "dark" : "light");
+    setCookie("pfs-theme", next ? "dark" : "light");
   };
 
   return (

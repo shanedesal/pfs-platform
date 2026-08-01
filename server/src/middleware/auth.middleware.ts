@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken, JwtPayload } from "../utils/jwt";
+import prisma from "../config/db";
 
 declare global {
   namespace Express {
@@ -9,7 +10,11 @@ declare global {
   }
 }
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const token = req.cookies?.accessToken;
 
   if (!token) {
@@ -18,9 +23,18 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
   try {
     const payload = verifyAccessToken(token);
-    req.user = payload;
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, role: true },
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    req.user = { userId: user.id, role: user.role };
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };

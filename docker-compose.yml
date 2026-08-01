@@ -27,6 +27,9 @@ services:
       - "5000:5000"
     env_file:
       - ./server/.env
+    environment:
+      # Development default: seed admin/customer + mock products on container start
+      SEED_DB: ${SEED_DB:-true}
     depends_on:
       postgres:
         condition: service_healthy

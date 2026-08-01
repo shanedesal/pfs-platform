@@ -1,0 +1,30 @@
+---
+description: Require developer approval before adding any third-party package
+alwaysApply: true
+---
+
+# Third-Party Packages
+
+Do **not** install, add, or upgrade third-party packages without explicit developer approval first.
+
+## Before adding a dependency
+
+1. **Propose first** — Tell the developer which package you want, why it is needed, and what alternatives were considered (including doing it without a new dependency).
+2. **Wait for approval** — Only proceed after the developer confirms.
+3. **No silent installs** — Do not run `npm install <pkg>`, `pnpm add`, `yarn add`, or edit `package.json` / lockfiles to introduce a new dependency unprompted.
+
+## After approval
+
+- Add only the approved package (and version constraints the developer agreed to).
+- Prefer existing project dependencies and stdlib when they already cover the need.
+- Do not invent or generate business rules, architecture, or workflows that assume a package the developer has not approved.
+
+## Examples
+
+```text
+❌ BAD: Silently run `npm install zod` while implementing validation
+✅ GOOD: "I'd like to add `zod` for request validation. OK to install, or prefer manual checks?"
+
+❌ BAD: Build auth flows around Passport before asking to add it
+✅ GOOD: Propose Passport (or another option), get approval, then implement
+```

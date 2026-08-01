@@ -1,13 +1,33 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import prisma from "../config/db";
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt";
+import { verifyRefreshToken } from "../utils/jwt";
+import { hashToken, issueTokenPair, revokeRefreshToken } from "../utils/tokens";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "strict" as const,
+  path: "/",
 };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Precomputed bcrypt hash so missing-user logins still pay the compare cost
+const DUMMY_PASSWORD_HASH =
+  "$2b$12$GVVRviBQHhuHKUx2adJZQe7EyXLfMEsMiXNMJJoJiZYrwQeH/dtum";
+
+function setAuthCookies(
+  res: Response,
+  accessToken: string,
+  refreshToken: string
+) {
+  return res
+    .cookie("accessToken", accessToken, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 })
+    .cookie("refreshToken", refreshToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+}
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -17,7 +37,21 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
+      return res.status(400).json({ message: "Invalid email address" });
+    }
+
+    if (typeof password !== "string" || password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+
+    if (typeof name !== "string" || name.trim().length < 1) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       return res.status(409).json({ message: "Email already in use" });
     }
@@ -25,20 +59,25 @@ export const register = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword, name, role: "CUSTOMER" },
+      data: {
+        email: normalizedEmail,
+        password: hashedPassword,
+        name: name.trim(),
+        role: "CUSTOMER",
+      },
     });
 
-    const payload = { userId: user.id, role: user.role };
-    const accessToken = signAccessToken(payload);
-    const refreshToken = signRefreshToken(payload);
+    const { accessToken, refreshToken } = await issueTokenPair({
+      userId: user.id,
+      role: user.role,
+    });
 
-    res
-      .cookie("accessToken", accessToken, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 })
-      .cookie("refreshToken", refreshToken, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 })
+    setAuthCookies(res, accessToken, refreshToken)
       .status(201)
       .json({ id: user.id, email: user.email, name: user.name, role: user.role });
   } catch (error) {
-    res.status(500).json({ message: "Registration failed", error });
+    console.error("Registration failed:", error);
+    res.status(500).json({ message: "Registration failed" });
   }
 };
 
@@ -46,28 +85,40 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
+    if (!email || !password || typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+
+    // Always run bcrypt.compare to avoid email enumeration via timing
+    const hash = user?.password ?? DUMMY_PASSWORD_HASH;
+    const validPassword = await bcrypt.compare(password, hash);
+
+    if (!user || !validPassword) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+    const { accessToken, refreshToken } = await issueTokenPair({
+      userId: user.id,
+      role: user.role,
+    });
 
-    const payload = { userId: user.id, role: user.role };
-    const accessToken = signAccessToken(payload);
-    const refreshToken = signRefreshToken(payload);
-
-    res
-      .cookie("accessToken", accessToken, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 })
-      .cookie("refreshToken", refreshToken, { ...COOKIE_OPTIONS, maxAge: 7 * 24 * 60 * 60 * 1000 })
-      .json({ id: user.id, email: user.email, name: user.name, role: user.role });
+    setAuthCookies(res, accessToken, refreshToken).json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Login failed", error });
+    console.error("Login failed:", error);
+    res.status(500).json({ message: "Login failed" });
   }
 };
+
+/** Concurrent refreshes revoke the same row within this window; treat as race, not theft. */
+const REFRESH_REUSE_GRACE_MS = 30_000;
 
 export const refresh = async (req: Request, res: Response) => {
   try {
@@ -77,17 +128,73 @@ export const refresh = async (req: Request, res: Response) => {
     }
 
     const payload = verifyRefreshToken(token);
-    const newAccessToken = signAccessToken({ userId: payload.userId, role: payload.role });
+    const tokenHash = hashToken(token);
+    const now = new Date();
 
-    res
-      .cookie("accessToken", newAccessToken, { ...COOKIE_OPTIONS, maxAge: 15 * 60 * 1000 })
-      .json({ message: "Token refreshed" });
-  } catch (error) {
+    // Atomically claim the token so only one concurrent refresh succeeds
+    const claimed = await prisma.refreshToken.updateMany({
+      where: {
+        tokenHash,
+        userId: payload.userId,
+        revokedAt: null,
+        expiresAt: { gt: now },
+      },
+      data: { revokedAt: now },
+    });
+
+    if (claimed.count === 1) {
+      const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { id: true, role: true },
+      });
+
+      if (!user) {
+        return res.status(401).json({ message: "Invalid refresh token" });
+      }
+
+      const { accessToken, refreshToken } = await issueTokenPair({
+        userId: user.id,
+        role: user.role,
+      });
+
+      return setAuthCookies(res, accessToken, refreshToken).json({
+        message: "Token refreshed",
+      });
+    }
+
+    // Claim failed — distinguish concurrent rotation from stolen-token reuse
+    const stored = await prisma.refreshToken.findUnique({
+      where: { tokenHash },
+    });
+
+    if (
+      stored &&
+      stored.userId === payload.userId &&
+      stored.revokedAt &&
+      now.getTime() - stored.revokedAt.getTime() > REFRESH_REUSE_GRACE_MS
+    ) {
+      await prisma.refreshToken.updateMany({
+        where: { userId: payload.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
+
+    return res.status(401).json({ message: "Invalid refresh token" });
+  } catch {
     res.status(401).json({ message: "Invalid refresh token" });
   }
 };
 
-export const logout = (req: Request, res: Response) => {
+export const logout = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies?.refreshToken;
+    if (token) {
+      await revokeRefreshToken(token);
+    }
+  } catch (error) {
+    console.error("Logout token revoke failed:", error);
+  }
+
   res
     .clearCookie("accessToken", COOKIE_OPTIONS)
     .clearCookie("refreshToken", COOKIE_OPTIONS)
@@ -100,8 +207,14 @@ export const me = async (req: Request, res: Response) => {
       where: { id: req.user!.userId },
       select: { id: true, email: true, name: true, role: true },
     });
+
+    if (!user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch user", error });
+    console.error("Failed to fetch user:", error);
+    res.status(500).json({ message: "Failed to fetch user" });
   }
 };

@@ -1,3 +1,4 @@
+import { AuthProvider } from "@/lib/auth-context";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -9,11 +10,7 @@ const instagramSans = localFont({
       weight: "300",
       style: "normal",
     },
-    {
-      path: "../fonts/Instagram Sans.ttf",
-      weight: "400",
-      style: "normal",
-    },
+    { path: "../fonts/Instagram Sans.ttf", weight: "400", style: "normal" },
     {
       path: "../fonts/Instagram Sans Medium.ttf",
       weight: "500",
@@ -27,6 +24,7 @@ const instagramSans = localFont({
   ],
   variable: "--font-instagram",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -40,9 +38,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${instagramSans.variable} antialiased`}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

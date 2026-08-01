@@ -1,0 +1,59 @@
+---
+description: Document new functionality under docs/ and append every change to docs/CHANGELOG.md
+alwaysApply: true
+---
+
+# Feature Documentation
+
+When adding or changing functionality, document it under a root-level `docs/` folder **and** record the change in `docs/CHANGELOG.md`.
+
+## When to document
+
+- New features or user-facing behavior
+- Non-trivial implementation changes (auth, APIs, data model, infra)
+- Updates to existing documented features — keep the matching doc current
+
+Skip feature docs for trivial fixes (typos, formatting, one-line refactors) unless the developer asks. If you skip the feature doc, do **not** invent a changelog entry either.
+
+## Where and how
+
+1. Put feature markdown files in `/docs` at the repo root (create the folder if missing).
+2. Use a clear name, e.g. `docs/auth-refresh-tokens.md` or `docs/admin-dashboard.md`.
+3. Prefer one doc per feature area; update the existing file when extending that area.
+4. **Always** update `docs/CHANGELOG.md` in the same turn whenever this rule applies (new or updated feature doc).
+
+## Required feature-doc content
+
+Each feature doc should include:
+
+1. **Overview** — what the feature does and why it exists
+2. **Behavior / rules** — expected behavior, edge cases, constraints
+3. **Implementation** — key files, APIs, data model, and how the pieces fit
+4. **Changes** — what was added or modified in this work (files, endpoints, migrations, config)
+
+## Changelog (`docs/CHANGELOG.md`)
+
+- Create `docs/CHANGELOG.md` if it does not exist.
+- Prepend a new dated entry at the top (newest first) for every documented change.
+- Each entry must list: date, short summary, link/path to the feature doc, and files or areas touched.
+- Do not leave the changelog stale relative to the feature docs you just wrote or updated.
+
+### Entry format
+
+```markdown
+## YYYY-MM-DD — Short summary
+
+- **Doc:** `docs/feature-name.md`
+- **What changed:** concise explanation of behavior and implementation updates
+- **Files:** key paths touched
+```
+
+## Examples
+
+```text
+❌ BAD: Ship refresh-token auth with no docs entry and no changelog
+✅ GOOD: Add docs/auth-refresh-tokens.md and prepend an entry in docs/CHANGELOG.md
+
+❌ BAD: Update a feature doc but forget docs/CHANGELOG.md
+✅ GOOD: Update the feature doc and append/prepend a matching changelog entry in the same change
+```
