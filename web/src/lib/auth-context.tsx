@@ -7,7 +7,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { API_URL, authFetch } from "./api";
+import { apiFetch, authFetch } from "./api";
 
 interface User {
   id: string;
@@ -55,10 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = async () => {
-    await fetch(`${API_URL}/api/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
+    await apiFetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     window.location.href = "/";
   };

@@ -1,10 +1,27 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, ShoppingCart, User, LogOut } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
+import HeaderSearch from "./header-search";
 import { useAuth } from "@/lib/auth-context";
+
+function SearchFallback() {
+  return (
+    <div className="hidden flex-1 max-w-md items-center gap-2 rounded-full border border-slate/20 px-4 py-2 md:flex">
+      <Search size={16} className="text-slate" />
+      <input
+        type="search"
+        placeholder="Search products..."
+        disabled
+        aria-label="Search products"
+        className="w-full bg-transparent text-sm outline-none placeholder:text-slate/60"
+      />
+    </div>
+  );
+}
 
 export default function Header() {
   const { user, loading, logout } = useAuth();
@@ -16,14 +33,9 @@ export default function Header() {
           <Image src="/logo.svg" alt="PFS" fill className="object-contain" />
         </Link>
 
-        <div className="hidden flex-1 max-w-md items-center gap-2 rounded-full border border-slate/20 px-4 py-2 md:flex">
-          <Search size={16} className="text-slate" />
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="w-full bg-transparent text-sm outline-none placeholder:text-slate/60"
-          />
-        </div>
+        <Suspense fallback={<SearchFallback />}>
+          <HeaderSearch />
+        </Suspense>
 
         <div className="flex items-center gap-3">
           <ThemeToggle />

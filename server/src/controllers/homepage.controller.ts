@@ -27,3 +27,20 @@ export const getHomepageFeatured = async (_req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch homepage featured products", error });
   }
 };
+
+/** Category chips for the storefront homepage nav (not a general catalog API). */
+export const getHomepageCategories = async (_req: Request, res: Response) => {
+  try {
+    const categories = await prisma.category.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch homepage categories", error });
+  }
+};

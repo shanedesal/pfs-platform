@@ -1,0 +1,34 @@
+---
+description: Log every frontend API endpoint call via web/src/lib/api.ts (dev only)
+alwaysApply: true
+---
+
+# Frontend API call logging
+
+Every frontend call to a backend endpoint must go through `web/src/lib/api.ts` (`apiFetch` or `authFetch`). Those helpers log method, path, and response status to the browser console **in development only** (`NODE_ENV === "development"`). Production builds must not log API traffic.
+
+## Rules
+
+1. **Route new endpoint calls through `apiFetch` or `authFetch`** — do not use raw `fetch(\`${API_URL}...\`)` at call sites.
+2. **Logging lives only in `web/src/lib/api.ts`** — do not add per-call-site `console.log` for API requests; inherit logging from the shared helpers.
+3. **Dev only** — gate logs with `process.env.NODE_ENV === "development"` (already done in `apiFetch`). Never remove that guard when extending helpers.
+4. **When adding helpers** — new wrappers must call `apiFetch` (or reuse the same dev-gated logger), not bare `fetch`.
+5. **JSON bodies** — prefer `body: JSON.stringify(...)`. `apiFetch` sets `Content-Type: application/json` when `body` is a string and no Content-Type is set. Do not force that header for `FormData`/`Blob`.
+
+## Expected pattern
+
+```typescript
+// ✅ GOOD — shared helper (logs in development only; JSON Content-Type inferred)
+const res = await apiFetch("/api/homepage/featured");
+const res = await apiFetch("/api/auth/login", {
+  method: "POST",
+  body: JSON.stringify(payload),
+});
+const me = await authFetch("/api/auth/me");
+
+// ❌ BAD — bypasses shared logging and JSON Content-Type default
+const res = await fetch(`${API_URL}/api/homepage/featured`);
+
+// ❌ BAD — logs in production
+console.log(`[api] GET ${path}`);
+```

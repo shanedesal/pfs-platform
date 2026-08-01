@@ -4,6 +4,36 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-01 — Homepage category product filter
+
+- **Doc:** `docs/homepage-featured.md`
+- **What changed:** Category chips navigate to `/?category=<id>` and load products from public `GET /api/products/by-category?categoryId=`. “All” restores featured products. Works logged out.
+- **Files:** `server/src/controllers/products.controller.ts`, `server/src/routes/products.ts`, `web/src/components/category-nav.tsx`, `web/src/components/featured-products.tsx`, `web/src/app/page.tsx`, `docs/homepage-featured.md`
+
+## 2026-08-01 — Public product search from header
+
+- **Doc:** `docs/product-search.md`
+- **What changed:** Added public `GET /api/products/search?q=` (name/description, case-insensitive). Header search navigates to `/?q=…`; homepage shows a results grid (works logged out). Uses `apiFetch`.
+- **Files:** `server/src/controllers/products.controller.ts`, `server/src/routes/products.ts`, `web/src/components/header-search.tsx`, `web/src/components/header.tsx`, `web/src/components/search-results.tsx`, `web/src/app/page.tsx`, `docs/product-search.md`
+
+## 2026-08-01 — Frontend API client logging (dev only)
+
+- **Doc:** `docs/frontend-api-client.md`
+- **What changed:** Added shared `apiFetch` that logs method/path/status in development only. String bodies default to `Content-Type: application/json` when unset (FormData/Blob unchanged). Existing homepage and auth fetches now use `apiFetch`/`authFetch` instead of raw `fetch`.
+- **Files:** `web/src/lib/api.ts`, `web/src/lib/auth-context.tsx`, `web/src/components/category-nav.tsx`, `web/src/components/featured-products.tsx`, `web/src/app/login/page.tsx`, `web/src/app/register/page.tsx`, `.cursor/rules/frontend-api-logging.mdc`, `docs/frontend-api-client.md`
+
+## 2026-08-01 — Prisma generate on server container start
+
+- **Doc:** `docs/docker-local-dev.md`
+- **What changed:** Server Docker `CMD` runs `npx prisma generate` before migrate/seed so the client matches the mounted schema (fixes missing models like `prisma.category` after schema changes).
+- **Files:** `server/Dockerfile`, `docs/docker-local-dev.md`
+
+## 2026-08-01 — Homepage categories from database
+
+- **Doc:** `docs/homepage-featured.md`
+- **What changed:** Added `Category` table and optional `Product.categoryId`. Homepage category nav loads from `GET /api/homepage/categories`. Seed upserts categories and links mock products. No admin CRUD yet.
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260801050000_add_product_categories/`, `server/prisma/seed.ts`, `server/src/controllers/homepage.controller.ts`, `server/src/routes/homepage.ts`, `web/src/components/category-nav.tsx`, `web/src/lib/category.ts`, `docs/homepage-featured.md`
+
 ## 2026-08-01 — Homepage featured products from database
 
 - **Doc:** `docs/homepage-featured.md`
