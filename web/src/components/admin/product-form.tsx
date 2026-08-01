@@ -17,6 +17,10 @@ type ProductFormProps = {
 const inputClass =
   "rounded-lg border border-slate/20 bg-transparent px-4 py-2 text-sm text-ink outline-none focus:border-brand dark:text-paper";
 
+/** Solid bg + extra right padding so native caret isn’t flush with the border; works in dark mode. */
+const selectClass =
+  "rounded-lg border border-slate/20 bg-paper py-2 pl-4 pr-10 text-sm text-ink outline-none focus:border-brand dark:bg-ink-soft dark:text-paper";
+
 export default function ProductForm({ initial, categories, onSubmit, onCancel }: ProductFormProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -139,7 +143,7 @@ export default function ProductForm({ initial, categories, onSubmit, onCancel }:
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className={inputClass}
+            className={selectClass}
             required
           >
             <option value="" disabled>
@@ -158,7 +162,7 @@ export default function ProductForm({ initial, categories, onSubmit, onCancel }:
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as typeof status)}
-            className={inputClass}
+            className={selectClass}
           >
             {PRODUCT_STATUSES.map((s) => (
               <option key={s.value} value={s.value}>

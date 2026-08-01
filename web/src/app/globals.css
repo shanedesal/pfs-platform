@@ -19,7 +19,12 @@
 }
 
 :root {
+  color-scheme: light;
   --font-instagram-fallback: "Instagram Sans", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 html {
@@ -53,4 +58,15 @@ body {
 
 .dark .tag-notch::before {
   background: var(--color-ink);
+}
+
+/* Native <select> popups inherit page color but not always background; keep options readable. */
+select option {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.dark select option {
+  background-color: var(--color-ink-soft);
+  color: var(--color-paper);
 }

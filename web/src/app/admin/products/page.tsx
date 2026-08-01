@@ -190,7 +190,7 @@ export default function AdminProductsPage() {
             setCategoryFilter(e.target.value);
             setPage(1);
           }}
-          className="rounded-lg border border-slate/20 bg-transparent px-3 py-2 text-sm text-ink outline-none focus:border-brand dark:text-paper"
+          className="rounded-lg border border-slate/20 bg-paper py-2 pl-3 pr-9 text-sm text-ink outline-none focus:border-brand dark:bg-ink-soft dark:text-paper"
         >
           <option value="">All Categories</option>
           {categories.map((category) => (
@@ -205,7 +205,7 @@ export default function AdminProductsPage() {
             setStatusFilter(e.target.value as ProductStatus | "");
             setPage(1);
           }}
-          className="rounded-lg border border-slate/20 bg-transparent px-3 py-2 text-sm text-ink outline-none focus:border-brand dark:text-paper"
+          className="rounded-lg border border-slate/20 bg-paper py-2 pl-3 pr-9 text-sm text-ink outline-none focus:border-brand dark:bg-ink-soft dark:text-paper"
         >
           <option value="">All Statuses</option>
           {PRODUCT_STATUSES.map((s) => (

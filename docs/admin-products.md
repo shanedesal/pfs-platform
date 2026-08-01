@@ -28,7 +28,7 @@ Same as the rest of `/admin` — requires an authenticated `ADMIN` user (see [`d
 | Rule | Detail |
 |------|--------|
 | Search | Matches `name` or `description`, case-insensitive |
-| Filter | By `categoryId` and/or `status`, combinable with search |
+| Filter | By `categoryId` and/or `status`, combinable with search. Filter `<select>`s use a solid paper/ink background (not transparent) so the native dropdown stays readable in dark mode, with extra right padding so the caret isn’t flush against the border |
 | Pagination | Server-side, default page size 10 |
 
 ### Delete
@@ -95,3 +95,4 @@ New required server env vars (`server/.env`): `SUPABASE_URL`, `SUPABASE_SERVICE_
 - Bumped `server/Dockerfile` to `node:22-alpine`
 - Added `multer` and `@supabase/supabase-js` dependencies
 - Built `/admin/products` page with table, search/filter/pagination, add/edit modal, delete confirmation
+- Fixed filter/form `<select>` dark-mode readability (solid backgrounds, `color-scheme`, option colors) and caret padding

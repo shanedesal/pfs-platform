@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-01 — Admin product filter selects dark-mode fix
+
+- **Doc:** `docs/admin-products.md`
+- **What changed:** Category/status filter dropdowns (and the matching selects in the product form) used `bg-transparent` with tight horizontal padding, so in dark mode the native option list was hard to read and the caret sat flush against the border. Selects now use solid `bg-paper` / `dark:bg-ink-soft`, extra right padding, global `color-scheme`, and option colors for readable popups.
+- **Files:** `web/src/app/admin/products/page.tsx`, `web/src/components/admin/product-form.tsx`, `web/src/app/globals.css`, `docs/admin-products.md`
+
 ## 2026-08-01 — Mobile header product search
 
 - **Doc:** `docs/product-search.md`
