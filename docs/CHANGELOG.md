@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-01 — Homepage featured products from database
+
+- **Doc:** `docs/homepage-featured.md`
+- **What changed:** Homepage “Trending now” grid loads from `GET /api/homepage/featured` (Product table, limit 8). Removed `web/src/lib/mock-data.ts`.
+- **Files:** `server/src/controllers/homepage.controller.ts`, `server/src/routes/homepage.ts`, `server/src/index.ts`, `web/src/components/featured-products.tsx`, `web/src/components/product-card.tsx`, `web/src/components/category-nav.tsx`, `web/src/lib/product.ts`, `docs/homepage-featured.md`
+
 ## 2026-08-01 — Enable DB seed by default in local Docker
 
 - **Doc:** `docs/docker-local-dev.md`

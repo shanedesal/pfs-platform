@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import productsRouter from "./routes/products";
+import homepageRouter from "./routes/homepage";
 import authRouter from "./routes/auth";
 import { requestLogger } from "./middleware/requestLogger";
 import { validateEnv } from "./utils/env";
@@ -34,6 +35,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/homepage", homepageRouter);
 app.use("/api/products", productsRouter);
 
 app.listen(PORT, () => {

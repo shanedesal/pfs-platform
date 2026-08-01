@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { categories } from "@/lib/mock-data";
+
+const categories = [
+  "All",
+  "Electronics",
+  "Fashion",
+  "Home",
+  "Beauty",
+  "Sports",
+  "Toys",
+];
 
 export default function CategoryNav() {
   const [active, setActive] = useState("All");
