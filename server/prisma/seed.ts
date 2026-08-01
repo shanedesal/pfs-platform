@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs';
 import process from 'process';
 import prisma from '../src/config/db';
 
+const STORAGE_BASE =
+  'https://ifssdnnzyfmoiughbfky.supabase.co/storage/v1/object/public/pfs-products';
+
 const mockCategories = [
   { name: "Electronics", sortOrder: 1 },
   { name: "Fashion", sortOrder: 2 },
@@ -13,14 +16,68 @@ const mockCategories = [
 ];
 
 const mockProducts = [
-  { id: "1", name: "Wireless Noise-Cancelling Headphones", category: "Electronics", price: 129.99, badge: "Best Seller" },
-  { id: "2", name: "Ceramic Pour-Over Coffee Set", category: "Home", price: 48.0, badge: "Trending" },
-  { id: "3", name: "Minimalist Canvas Backpack", category: "Fashion", price: 74.5, badge: "Trending" },
-  { id: "4", name: "Smart Fitness Band", category: "Electronics", price: 59.99, badge: "New" },
-  { id: "5", name: "Weighted Sleep Blanket", category: "Home", price: 89.0, badge: "Best Seller" },
-  { id: "6", name: "Stainless Steel Chef Knife Set", category: "Home", price: 112.0 },
-  { id: "7", name: "Portable Bluetooth Speaker", category: "Electronics", price: 45.99 },
-  { id: "8", name: "Merino Wool Crewneck Sweater", category: "Fashion", price: 68.0, badge: "Trending" },
+  {
+    id: "1",
+    name: "Wireless Noise-Cancelling Headphones",
+    category: "Electronics",
+    price: 129.99,
+    badge: "Best Seller",
+    imageUrl: `${STORAGE_BASE}/noisecancellinghp.jpg`,
+  },
+  {
+    id: "2",
+    name: "Ceramic Pour-Over Coffee Set",
+    category: "Home",
+    price: 48.0,
+    badge: "Trending",
+    imageUrl: `${STORAGE_BASE}/ceramiccoffeeset.jpg`,
+  },
+  {
+    id: "3",
+    name: "Minimalist Canvas Backpack",
+    category: "Fashion",
+    price: 74.5,
+    badge: "Trending",
+    imageUrl: `${STORAGE_BASE}/Minimalistbpack.jpg`,
+  },
+  {
+    id: "4",
+    name: "Smart Fitness Band",
+    category: "Electronics",
+    price: 59.99,
+    badge: "New",
+    imageUrl: `${STORAGE_BASE}/smartfband.jpg`,
+  },
+  {
+    id: "5",
+    name: "Weighted Sleep Blanket",
+    category: "Home",
+    price: 89.0,
+    badge: "Best Seller",
+    imageUrl: `${STORAGE_BASE}/linenblanket.jpg`,
+  },
+  {
+    id: "6",
+    name: "Stainless Steel Chef Knife Set",
+    category: "Home",
+    price: 112.0,
+    imageUrl: `${STORAGE_BASE}/knife.jpg`,
+  },
+  {
+    id: "7",
+    name: "Portable Bluetooth Speaker",
+    category: "Electronics",
+    price: 45.99,
+    imageUrl: `${STORAGE_BASE}/portablebspeaker.jpg`,
+  },
+  {
+    id: "8",
+    name: "Merino Wool Crewneck Sweater",
+    category: "Fashion",
+    price: 68.0,
+    badge: "Trending",
+    imageUrl: `${STORAGE_BASE}/merino.jpg`,
+  },
 ];
 
 async function main() {
@@ -69,7 +126,7 @@ async function main() {
     console.log(`Upserted category: ${created.name}`);
   }
 
-  // Seed Products
+  // Seed Products (cover image required; gallery left empty for now)
   for (const product of mockProducts) {
     const categoryId = categoryByName.get(product.category);
     const createdProduct = await prisma.product.upsert({
@@ -80,6 +137,7 @@ async function main() {
         description: `${product.category} - ${product.badge ? product.badge : 'Standard'} Item`,
         stock: 100,
         categoryId,
+        imageUrl: product.imageUrl,
       },
       create: {
         id: product.id,
@@ -88,6 +146,7 @@ async function main() {
         description: `${product.category} - ${product.badge ? product.badge : 'Standard'} Item`,
         stock: 100,
         categoryId,
+        imageUrl: product.imageUrl,
       },
     });
     console.log(`Upserted product: ${createdProduct.name}`);

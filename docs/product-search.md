@@ -14,7 +14,7 @@ Storefront product search lets visitors find products by name or description fro
 | Match | Case-insensitive `contains` on `name` **or** `description` |
 | Limit | At most 48 products |
 | Order | Newest first (`createdAt` desc) |
-| Fields | Same product shape as homepage featured: `id`, `name`, `description`, `price` (number), `stock`, `imageUrl` |
+| Fields | Same product shape as homepage featured: `id`, `name`, `description`, `price` (number), `stock`, `imageUrl` (required cover) |
 | Response | `{ q, products }` |
 | Empty results | Homepage shows a short empty-state message |
 | Failure | Homepage shows a short error message; does not fall back to mock data |

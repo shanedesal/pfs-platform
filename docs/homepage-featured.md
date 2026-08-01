@@ -13,7 +13,7 @@ The storefront homepage loads featured products and category chips from dedicate
 | Public | No auth required |
 | Limit | At most 8 products |
 | Order | Newest first (`createdAt` desc) |
-| Fields | `id`, `name`, `description`, `price` (number), `stock`, `imageUrl` |
+| Fields | `id`, `name`, `description`, `price` (number), `stock`, `imageUrl` (required cover URL) |
 | Empty | Homepage shows a short empty-state message |
 | Failure | Homepage shows a short error message; does not fall back to mock data |
 
@@ -57,6 +57,7 @@ The storefront homepage loads featured products and category chips from dedicate
 
 - `Category` — `id`, `name` (unique), `sortOrder`, timestamps
 - `Product.categoryId` — optional FK with index
+- `Product.imageUrl` — required cover; gallery rows in `ProductImage` (see `docs/product-images.md`)
 
 ### API
 
@@ -75,7 +76,7 @@ The storefront homepage loads featured products and category chips from dedicate
 - `web/src/components/featured-products.tsx` — featured when no category; by-category when `categoryId` prop set
 - `web/src/components/category-nav.tsx` — loads chips; navigates to `/?category=<id>`
 - `web/src/app/page.tsx` — passes `category` search param into nav + product grid
-- `web/src/components/product-card.tsx` — renders name, description, price from `Product`
+- `web/src/components/product-card.tsx` — renders cover image, name, description, price from `Product`
 - `web/src/lib/product.ts` — shared `Product` type
 - `web/src/lib/category.ts` — shared `Category` type
 
@@ -86,3 +87,4 @@ The storefront homepage loads featured products and category chips from dedicate
 - Category nav loads from the API instead of hardcoded strings
 - Seed creates categories and assigns them to mock products
 - Added `GET /api/products/by-category`; category chips filter the homepage product grid via `?category=`
+- Product covers: required `imageUrl` on list responses; cards render covers (see `docs/product-images.md`)

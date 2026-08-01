@@ -13,7 +13,7 @@ Local stack is started with Docker Compose (`postgres`, `server`, `web`). The se
 | Seed on start | Runs only when `SEED_DB=true` |
 | Dev default | `SEED_DB` defaults to `true` via `docker-compose.yml` (`${SEED_DB:-true}`) and is set in `server/.env` |
 | Production | Set `SEED_DB=false` (or omit and override compose) so demo accounts are not inserted |
-| Seed data | `admin@example.com` / `customer@example.com`, password `password123`; categories + eight mock products |
+| Seed data | `admin@example.com` / `customer@example.com`, password `password123`; categories + eight mock products with Supabase cover URLs |
 | Idempotent seed | Uses `upsert`; existing users keep their current password (`update: {}`) |
 
 ## Implementation

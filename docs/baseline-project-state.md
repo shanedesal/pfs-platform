@@ -88,7 +88,9 @@ pfs-platform/
 
 - **User** — `id`, `email` (unique), `password`, `name`, `role`, timestamps; has many `RefreshToken`
 - **RefreshToken** — `id` (jti), `tokenHash` (unique), `userId`, `expiresAt`, `revokedAt?`, `createdAt`
-- **Product** — `id`, `name`, `description?`, `price` (Decimal 10,2), `stock`, `imageUrl?`, timestamps
+- **Product** — `id`, `name`, `description?`, `price` (Decimal 10,2), `stock`, `imageUrl` (required cover), `categoryId?`, timestamps; has many `ProductImage`
+- **ProductImage** — gallery rows (`url`, `sortOrder`); cascade on product delete
+- **Category** — `id`, `name` (unique), `sortOrder`, timestamps
 
 Migrations present:
 

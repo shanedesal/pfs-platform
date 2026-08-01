@@ -4,5 +4,6 @@ export type Product = {
   description: string | null;
   price: number;
   stock: number;
-  imageUrl: string | null;
+  /** Cover / thumbnail URL (required). */
+  imageUrl: string;
 };

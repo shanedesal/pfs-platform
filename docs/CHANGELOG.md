@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-01 — Product cover images + gallery model
+
+- **Doc:** `docs/product-images.md`
+- **What changed:** `Product.imageUrl` is required (cover). Added empty `ProductImage` gallery table for future detail views. Seed fills covers from public Supabase Storage. Product cards render covers; `POST /api/products` requires `imageUrl`.
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260801070000_product_images_required_cover/`, `server/prisma/seed.ts`, `server/src/controllers/products.controller.ts`, `web/src/components/product-card.tsx`, `web/src/lib/product.ts`, `docs/homepage-featured.md`, `docs/product-search.md`, `docs/baseline-project-state.md`
+
 ## 2026-08-01 — Homepage category product filter
 
 - **Doc:** `docs/homepage-featured.md`

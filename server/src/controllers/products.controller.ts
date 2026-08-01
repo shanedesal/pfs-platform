@@ -104,8 +104,20 @@ export const searchProducts = async (req: Request, res: Response) => {
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const { name, description, price, stock, imageUrl } = req.body;
+
+    if (typeof imageUrl !== "string" || !imageUrl.trim()) {
+      res.status(400).json({ message: "imageUrl is required" });
+      return;
+    }
+
     const product = await prisma.product.create({
-      data: { name, description, price, stock, imageUrl },
+      data: {
+        name,
+        description,
+        price,
+        stock,
+        imageUrl: imageUrl.trim(),
+      },
     });
     res.status(201).json(product);
   } catch (error) {

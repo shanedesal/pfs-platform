@@ -43,16 +43,31 @@ model Category {
 }
 
 model Product {
-  id          String    @id @default(uuid())
+  id          String         @id @default(uuid())
   name        String
   description String?
-  price       Decimal   @db.Decimal(10, 2)
-  stock       Int       @default(0)
-  imageUrl    String?
+  price       Decimal        @db.Decimal(10, 2)
+  stock       Int            @default(0)
+  /// Cover / thumbnail image (required). Extra shots live in ProductImage.
+  imageUrl    String
   categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  category    Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images      ProductImage[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
   @@index([categoryId])
+}
+
+/// Additional product gallery images (Shopee-style). Cover stays on Product.imageUrl.
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
 }
