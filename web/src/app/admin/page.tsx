@@ -10,7 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { authFetch } from "@/lib/api";
-import type { DashboardStats } from "@/lib/admin";
+import type { DashboardStats } from "@/lib/admin/dashboard";
 import AdminStatCard from "@/components/admin/stat-card";
 
 export default function AdminDashboard() {

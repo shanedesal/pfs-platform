@@ -2,7 +2,7 @@
 
 ## Overview
 
-The admin section (`/admin`) is gated to authenticated users with the `ADMIN` role. The first admin screen is a dashboard overview showing summary cards for store activity — products, orders, customers, and sales. Only metrics backed by an existing table (products, customers) are wired to real data for now; order and sales metrics are placeholders until those features exist.
+The admin section (`/admin`) is gated to authenticated users with the `ADMIN` role. It now has three screens sharing one shell: a **Dashboard** overview, **Products** ([`docs/admin-products.md`](./admin-products.md)), and **Categories** ([`docs/admin-categories.md`](./admin-categories.md)), navigated via a left sidebar. The dashboard itself shows summary cards for store activity — products, orders, customers, and sales. Only metrics backed by an existing table (products, customers) are wired to real data for now; order and sales metrics are placeholders until those features exist.
 
 ## Behavior / rules
 
@@ -13,7 +13,7 @@ The admin section (`/admin`) is gated to authenticated users with the `ADMIN` ro
 | Auth | Must be logged in |
 | Role | Must be `ADMIN`; non-admins are redirected to `/` |
 | Unauthenticated | Redirected to `/login` |
-| Shell | Admin pages share a top bar (brand, "Back to store", theme toggle, logout) separate from the storefront header |
+| Shell | Admin pages share a top bar (brand, "Back to store", theme toggle, logout) separate from the storefront header, plus a left sidebar (`Dashboard` / `Products` / `Categories`) for navigating between admin sections |
 
 ### Dashboard summary cards
 
@@ -46,13 +46,15 @@ The admin section (`/admin`) is gated to authenticated users with the `ADMIN` ro
 
 ### Web
 
-- `web/src/app/admin/layout.tsx` — role/auth guard only (unchanged logic); renders `AdminHeader` + `children`
+- `web/src/app/admin/layout.tsx` — role/auth guard (unchanged logic); renders `AdminHeader` (top bar) + a flex row of `AdminSidebar` (left) and `children` (main content) — shared by every `/admin/*` route
 - `web/src/components/admin/` — admin-only components, kept separate from shared/storefront components in `web/src/components/`:
   - `admin/header.tsx` — admin top bar (logo, "Admin" badge, back-to-store link, theme toggle, logout); separate from the storefront `Header` since admin has no search/cart/account-dropdown concerns
+  - `admin/sidebar.tsx` — left nav (`Dashboard` / `Products` / `Categories`), active link highlighted via `usePathname()`
   - `admin/stat-card.tsx` — dashboard summary card: label, icon, value (or "—"), optional "Coming soon" hint, loading skeleton
+  - `admin/modal.tsx`, `admin/confirm-dialog.tsx` — shared dialog primitives used by the Products and Categories pages (see their docs) for add/edit forms and delete confirmations
 - `web/src/components/logo.tsx` — shared PFS wordmark (`/logo.svg`), used by both the storefront `Header` and `admin/header.tsx` so sizing/markup isn't duplicated
 - `web/src/app/admin/page.tsx` — fetches `/api/admin/dashboard-stats` via `authFetch` and renders the six summary cards using `admin/stat-card.tsx`
-- `web/src/lib/admin.ts` — `DashboardStats` type
+- `web/src/lib/admin/dashboard.ts` — `DashboardStats` type; admin-only `lib` code lives under `web/src/lib/admin/`, mirroring the `web/src/components/admin/` split (see [`docs/admin-products.md`](./admin-products.md) / [`docs/admin-categories.md`](./admin-categories.md))
 - Same fonts/colors/tokens as the storefront (`--color-brand`, `--color-ink`, `--color-paper`, `--color-slate`, `font-display`); no new design tokens introduced
 
 ## Changes
@@ -63,3 +65,6 @@ The admin section (`/admin`) is gated to authenticated users with the `ADMIN` ro
 - Extracted a shared `Logo` component reused by both `Header` and `admin/header.tsx`
 - Moved admin-only components into `web/src/components/admin/` (separate from shared/storefront components), dropping the redundant `admin-` filename prefix now that the folder namespaces them
 - Order/sales cards are intentionally blank pending future `Order`/payments data model
+- Added `admin/sidebar.tsx` and restyled `admin/layout.tsx` into a header + left-sidebar shell shared by the new `/admin/products` and `/admin/categories` pages
+- Added shared `admin/modal.tsx` and `admin/confirm-dialog.tsx` primitives (first used by Products and Categories management)
+- Moved admin-only `lib` modules into `web/src/lib/admin/` (`admin.ts` → `admin/dashboard.ts`, `admin-products.ts` → `admin/products.ts`, `admin-categories.ts` → `admin/categories.ts`), mirroring the existing `web/src/components/admin/` separation

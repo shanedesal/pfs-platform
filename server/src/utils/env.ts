@@ -1,4 +1,11 @@
-const REQUIRED = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET"] as const;
+const REQUIRED = [
+  "DATABASE_URL",
+  "JWT_SECRET",
+  "JWT_REFRESH_SECRET",
+  "SUPABASE_URL",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "SUPABASE_STORAGE_BUCKET",
+] as const;
 
 export function validateEnv(): void {
   const missing = REQUIRED.filter((key) => !process.env[key]?.trim());

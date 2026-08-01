@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import AdminHeader from "@/components/admin/header";
+import AdminSidebar from "@/components/admin/sidebar";
 
 export default function AdminLayout({
   children,
@@ -34,7 +35,10 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen">
       <AdminHeader />
-      <main className="mx-auto max-w-7xl px-6 py-10">{children}</main>
+      <div className="mx-auto flex max-w-7xl items-start gap-6 px-6">
+        <AdminSidebar />
+        <main className="min-w-0 flex-1 py-10">{children}</main>
+      </div>
     </div>
   );
 }

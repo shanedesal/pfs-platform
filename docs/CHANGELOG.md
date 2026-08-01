@@ -4,6 +4,36 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-01 — Mobile header product search
+
+- **Doc:** `docs/product-search.md`
+- **What changed:** Storefront header search was desktop-only (`hidden` below `md`). On mobile, a search icon now sits with the theme/cart actions and opens a full-width search bar under the header (auto-focus, Escape/submit to close). Same `/?q=…` flow as desktop.
+- **Files:** `web/src/components/header-search.tsx`, `web/src/components/header.tsx`, `docs/product-search.md`
+
+## 2026-08-01 — Admin `lib` code moved under `lib/admin/`
+
+- **Doc:** `docs/admin-dashboard.md`
+- **What changed:** Moved the admin-only frontend data modules into `web/src/lib/admin/` (`lib/admin.ts` → `lib/admin/dashboard.ts`, `lib/admin-products.ts` → `lib/admin/products.ts`, `lib/admin-categories.ts` → `lib/admin/categories.ts`), mirroring the existing `web/src/components/admin/` split so admin-only code is grouped separately from shared/storefront `lib` code. No behavior change — updated all importers accordingly.
+- **Files:** `web/src/lib/admin/dashboard.ts`, `web/src/lib/admin/products.ts`, `web/src/lib/admin/categories.ts`, `web/src/app/admin/page.tsx`, `web/src/app/admin/products/page.tsx`, `web/src/app/admin/categories/page.tsx`, `web/src/components/admin/product-form.tsx`, `web/src/components/admin/category-form.tsx`, `docs/admin-dashboard.md`, `docs/admin-products.md`, `docs/admin-categories.md`
+
+## 2026-08-01 — Admin category management
+
+- **Doc:** `docs/admin-categories.md`
+- **What changed:** Added admin category CRUD (`GET/POST /api/admin/categories`, `PUT/DELETE /api/admin/categories/:id`) with product counts. Deletion is hard-blocked (`409`) while any product still references the category; the `/admin/categories` page shows a table with add/edit modal and a delete confirmation whose button is disabled (with a tooltip) when the category is in use.
+- **Files:** `server/src/controllers/admin-categories.controller.ts`, `server/src/routes/admin.ts`, `web/src/app/admin/categories/page.tsx`, `web/src/components/admin/category-form.tsx`, `web/src/lib/category.ts`, `web/src/lib/admin-categories.ts`, `docs/admin-categories.md`
+
+## 2026-08-01 — Admin product management + image uploads
+
+- **Doc:** `docs/admin-products.md`
+- **What changed:** Added full admin product CRUD (view/search/filter/add/edit/delete) at `/admin/products`, with a confirmation dialog before delete. Added a `ProductStatus` enum (`Active`/`Inactive`/`Out of Stock`, manually set, independent of stock) and admin endpoints under `/api/admin/products` (list with search/category/status filters + pagination, get, create, update, delete). Product images (cover + optional gallery, backed by the existing `ProductImage` table) are now real file uploads to Supabase Storage via a new `POST /api/admin/products/upload-image` endpoint, instead of a plain URL field. Removed the old public admin-create route on `POST /api/products` (superseded by `/api/admin/products`). Bumped the server Docker image to `node:22-alpine` (required by `@supabase/supabase-js`).
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260801071445_add_product_status/`, `server/src/config/supabase.ts`, `server/src/middleware/upload.middleware.ts`, `server/src/controllers/admin-products.controller.ts`, `server/src/routes/admin.ts`, `server/src/routes/products.ts`, `server/src/controllers/products.controller.ts`, `server/src/utils/env.ts`, `server/Dockerfile`, `server/package.json`, `web/src/app/admin/products/page.tsx`, `web/src/components/admin/product-form.tsx`, `web/src/lib/product.ts`, `web/src/lib/admin-products.ts`, `docs/admin-products.md`
+
+## 2026-08-01 — Admin sidebar shell + shared dialog primitives
+
+- **Doc:** `docs/admin-dashboard.md`
+- **What changed:** Restyled the admin shell with a left sidebar (`Dashboard` / `Products` / `Categories`) alongside the existing top bar, shared by all `/admin/*` pages. Added reusable `Modal` and `ConfirmDialog` components used by the new Products and Categories management pages.
+- **Files:** `web/src/app/admin/layout.tsx`, `web/src/components/admin/sidebar.tsx`, `web/src/components/admin/modal.tsx`, `web/src/components/admin/confirm-dialog.tsx`, `docs/admin-dashboard.md`
+
 ## 2026-08-01 — Homepage footer contact + social links
 
 - **Doc:** `docs/homepage-footer.md`

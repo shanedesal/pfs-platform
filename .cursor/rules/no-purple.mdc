@@ -1,0 +1,46 @@
+---
+description: Disallow purple/violet colors and any gradients in UI components and pages
+globs: web/src/**/*.tsx,web/src/**/*.css
+alwaysApply: false
+---
+
+# No Purple, No Gradients
+
+Two rules for components and pages:
+
+1. Do not use purple, violet, or fuchsia anywhere — solid colors, borders, text, or otherwise.
+2. Do not use gradients at all, of any color. Use flat, solid colors only.
+
+This applies to Tailwind utility classes, arbitrary values, inline styles, and CSS.
+
+Stick to the approved palette defined in `web/src/app/globals.css` (`--color-brand`, `--color-ink`, `--color-paper`, `--color-slate`, `--color-amber`, `--color-success`) or their Tailwind equivalents (`brand`, `ink`, `paper`, `slate`, `amber`, `success`).
+
+## Examples
+
+```tsx
+// ❌ BAD — purple/violet/fuchsia utility classes
+<div className="bg-purple-500 text-violet-600">...</div>
+
+// ❌ BAD — any gradient, even non-purple
+<div className="bg-gradient-to-r from-brand to-brand-dark">...</div>
+
+// ❌ BAD — arbitrary hex/hsl values that are purple
+<div className="bg-[#8B5CF6]" style={{ color: "#a855f7" }}>...</div>
+
+// ✅ GOOD — flat, solid color from the approved palette
+<div className="bg-brand text-paper">...</div>
+```
+
+```css
+/* ❌ BAD — gradient, and purple */
+.badge {
+  background: linear-gradient(90deg, #8b5cf6, #d946ef);
+}
+
+/* ✅ GOOD — flat color */
+.badge {
+  background: var(--color-brand);
+}
+```
+
+If a design calls for an accent beyond the current palette, propose a new non-purple, non-gradient color token in `globals.css` instead.

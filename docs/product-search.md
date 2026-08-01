@@ -18,7 +18,8 @@ Storefront product search lets visitors find products by name or description fro
 | Response | `{ q, products }` |
 | Empty results | Homepage shows a short empty-state message |
 | Failure | Homepage shows a short error message; does not fall back to mock data |
-| UI entry | Header search form (md+); submits to `/?q=…` |
+| UI entry | Header search — inline form on md+; on smaller screens a search icon opens a full-width bar under the header. Submits to `/?q=…` |
+| Mobile | Search icon (next to theme/cart) toggles the bar; Escape or submit closes it; input auto-focuses when opened |
 | Clear | “Clear search” link returns to `/` (hero + featured) |
 
 ## Implementation
@@ -34,8 +35,8 @@ Storefront product search lets visitors find products by name or description fro
 
 ### Web
 
-- `web/src/components/header-search.tsx` — controlled search form; navigates to `/?q=…`
-- `web/src/components/header.tsx` — wraps search in `Suspense` for `useSearchParams`
+- `web/src/components/header-search.tsx` — controlled search form (desktop + mobile toggle/panel); navigates to `/?q=…`
+- `web/src/components/header.tsx` — wraps search in `Suspense` for `useSearchParams`; passes trailing header actions into search so the mobile icon sits with theme/cart
 - `web/src/components/search-results.tsx` — fetches via `apiFetch`, renders `ProductCard` grid
 - `web/src/app/page.tsx` — when `q` is present, shows search results instead of hero/categories/featured
 
@@ -44,3 +45,4 @@ Storefront product search lets visitors find products by name or description fro
 - Added public `GET /api/products/search`
 - Wired header search to homepage `?q=` flow
 - Added search results section on the homepage
+- Added mobile header search: icon toggle opens a full-width search bar under the sticky header (desktop inline bar unchanged)
