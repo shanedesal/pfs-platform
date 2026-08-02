@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-02 — Admin customer management (profiles, order history, enable/disable)
+
+- **Doc:** `docs/customer-management.md` (also updated `docs/auth-sessions.md` cross-reference)
+- **What changed:** Admins can now manage customer accounts from `/admin/customers` — a searchable/filterable (by account status)/paginated table (customer name, email, contact number, number of orders, total purchase amount, account status) and a profile page at `/admin/customers/[id]` (contact info, order history linking into the existing admin order detail page, and saved addresses). Admins can disable or re-enable a customer's account from either view, with a confirmation dialog. Disabling immediately revokes all of that customer's refresh tokens (logging them out everywhere) and blocks both future logins (`403`) and any still-valid access token (`401` via `authenticate`). Added `User.isActive` (defaults to `true`). Order count/purchase totals exclude `CANCELLED` orders. New admin-only endpoints: `GET /api/admin/customers`, `GET /api/admin/customers/:id`, `PATCH /api/admin/customers/:id/status`. Added a "Customers" entry to the admin sidebar.
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260802064316_add_user_is_active/`, `server/src/controllers/admin-customers.controller.ts`, `server/src/routes/admin.ts`, `server/src/middleware/auth.middleware.ts`, `server/src/controllers/auth.controller.ts`, `web/src/lib/admin/customers.ts`, `web/src/app/admin/customers/page.tsx`, `web/src/app/admin/customers/[id]/page.tsx`, `web/src/components/admin/sidebar.tsx`, `docs/customer-management.md`, `docs/auth-sessions.md`
+
 ## 2026-08-02 — Customer order management (history, details, self-cancel)
 
 - **Doc:** `docs/customer-order-management.md` (also updated `docs/admin-orders.md` cross-reference)

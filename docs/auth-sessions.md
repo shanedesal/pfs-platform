@@ -16,6 +16,7 @@ PFS authenticates users with httpOnly cookies: a short-lived access token and a 
 | Missing / expired / mismatched | `401` only — no mass revoke |
 | Client single-flight | `authFetch` shares one in-flight refresh promise so parallel `401`s do not stampede `/refresh` |
 | Rate limits | Login: 5 failed / 15m / IP; Register: 10 / hour / IP; Refresh: 30 / 15m / IP; Logout: 60 / 15m / IP |
+| Disabled accounts | `authenticate` loads `User.isActive` on every request and returns `401` if false, even with a still-valid access token; `login` returns `403` for a disabled account. See [`docs/customer-management.md`](./customer-management.md) |
 
 ### Endpoints
 
@@ -47,3 +48,4 @@ PFS authenticates users with httpOnly cookies: a short-lived access token and a 
 - 30s grace before treating revoked-token replay as theft (avoids multi-tab / parallel refresh logging everyone out).
 - Frontend single-flight refresh for parallel `authFetch` callers.
 - Rate limit on `POST /api/auth/logout` (60 / 15 minutes / IP).
+- `authenticate` and `login` now reject disabled accounts (`User.isActive`); see [`docs/customer-management.md`](./customer-management.md).

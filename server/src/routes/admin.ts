@@ -19,6 +19,11 @@ import {
   getAdminOrder,
   updateAdminOrderStatus,
 } from "../controllers/admin-orders.controller";
+import {
+  listAdminCustomers,
+  getAdminCustomer,
+  updateAdminCustomerStatus,
+} from "../controllers/admin-customers.controller";
 import { authenticate, authorize } from "../middleware/auth.middleware";
 import { uploadSingleImage } from "../middleware/upload.middleware";
 
@@ -43,5 +48,9 @@ router.delete("/categories/:id", deleteAdminCategory);
 router.get("/orders", listAdminOrders);
 router.get("/orders/:orderNumber", getAdminOrder);
 router.patch("/orders/:orderNumber/status", updateAdminOrderStatus);
+
+router.get("/customers", listAdminCustomers);
+router.get("/customers/:id", getAdminCustomer);
+router.patch("/customers/:id/status", updateAdminCustomerStatus);
 
 export default router;

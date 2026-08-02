@@ -38,6 +38,8 @@ model User {
   name          String
   phoneNumber   String?
   role          Role           @default(CUSTOMER)
+  /// Admin-controlled account lock. Disabled accounts can't log in and lose active sessions immediately.
+  isActive      Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   refreshTokens RefreshToken[]

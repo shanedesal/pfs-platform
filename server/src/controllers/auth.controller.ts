@@ -108,6 +108,10 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({ message: "This account has been disabled. Contact support for help." });
+    }
+
     const { accessToken, refreshToken } = await issueTokenPair({
       userId: user.id,
       role: user.role,
