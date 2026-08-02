@@ -7,6 +7,8 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+# Webpack in Docker: Turbopack's in-container memory growth hits Next's
+# 80% heap threshold, restarts the dev server, and makes every route cold/slow.
+CMD ["npm", "run", "dev", "--", "--webpack"]

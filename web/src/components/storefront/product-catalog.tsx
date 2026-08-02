@@ -78,8 +78,8 @@ function ProductCatalogInner() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: ProductCatalogResponse = await res.json();
         if (!cancelled) {
-          setProducts(data.items);
-          setTotal(data.total);
+          setProducts(Array.isArray(data.items) ? data.items : []);
+          setTotal(typeof data.total === "number" ? data.total : 0);
           setStatus("ready");
         }
       } catch {

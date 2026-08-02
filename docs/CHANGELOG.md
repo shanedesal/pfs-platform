@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-02 — Docker web performance (webpack + heap)
+
+- **Doc:** `docs/docker-local-dev.md`
+- **What changed:** `pfs_web` was hitting Next.js’s memory-threshold restart under Turbopack (multi‑GB RAM / high CPU), which forced cold compiles and multi-second page times. Docker web now runs `next dev --webpack`, sets `NODE_OPTIONS=--max-old-space-size=4096`, and the catalog guards against a missing `items` array.
+- **Files:** `web/Dockerfile`, `docker-compose.yml`, `web/src/components/storefront/product-catalog.tsx`, `docs/docker-local-dev.md`
+
 ## 2026-08-02 — Storefront vs admin component folders
 
 - **Doc:** `docs/frontend-components.md` (paths updated in homepage/product/admin docs)

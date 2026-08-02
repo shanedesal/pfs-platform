@@ -47,6 +47,11 @@ services:
       - "3000:3000"
     env_file:
       - ./web/.env
+    environment:
+      # Raise V8 heap so Next's 80%-of-limit memory restart is less aggressive in Docker.
+      NODE_OPTIONS: --max-old-space-size=4096
+    # Webpack in Docker — see docs/docker-local-dev.md (Turbopack memory restarts).
+    command: ["npm", "run", "dev", "--", "--webpack"]
     depends_on:
       - server
     volumes:
