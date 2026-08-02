@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ShoppingCart } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Product } from "@/lib/product";
-import { isProductAvailable } from "@/lib/product";
+import { getDescriptionPreview, isProductAvailable } from "@/lib/product";
 
 type ProductDetailProps = {
   productId: string;
@@ -15,12 +16,16 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "missing">(
     "loading"
   );
+  const [activeImage, setActiveImage] = useState(0);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setStatus("loading");
+      setActiveImage(0);
+      setDescriptionExpanded(false);
       try {
         const res = await apiFetch(`/api/products/${encodeURIComponent(productId)}`);
         if (res.status === 404) {
@@ -82,6 +87,14 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   }
 
   const available = isProductAvailable(product);
+  const description = product.description ?? "";
+  const { preview, hasMore } = description ? getDescriptionPreview(description) : { preview: "", hasMore: false };
+
+  const gallery = [
+    { id: "cover", url: product.imageUrl },
+    ...(product.images ?? []).map((img) => ({ id: img.id, url: img.url })),
+  ].filter((img) => img.url);
+  const activeUrl = gallery[activeImage]?.url ?? gallery[0]?.url;
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-12">
@@ -93,52 +106,101 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-2xl border border-slate/15 bg-brand/10">
-          {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="aspect-square w-full object-cover"
-            />
-          ) : (
-            <div className="flex aspect-square items-center justify-center">
-              <span className="font-display text-brand/60">PFS</span>
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="overflow-hidden rounded-2xl border border-slate/15 bg-brand/10">
+            {activeUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={activeUrl}
+                alt={product.name}
+                className="aspect-square w-full object-cover"
+              />
+            ) : (
+              <div className="flex aspect-square items-center justify-center">
+                <span className="font-display text-brand/60">PFS</span>
+              </div>
+            )}
+          </div>
+
+          {gallery.length > 1 ? (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {gallery.map((img, index) => (
+                <button
+                  key={img.id}
+                  type="button"
+                  onClick={() => setActiveImage(index)}
+                  aria-label={`Show image ${index + 1}`}
+                  aria-current={index === activeImage}
+                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition ${
+                    index === activeImage
+                      ? "border-brand"
+                      : "border-transparent opacity-80 hover:opacity-100 hover:border-slate/30"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img.url}
+                    alt={`${product.name} thumbnail ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
             </div>
-          )}
+          ) : null}
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
           {product.category?.name ? (
-            <p className="font-mono text-xs uppercase tracking-wide text-slate">
+            <span className="inline-flex w-fit items-center rounded-full bg-brand/10 px-3 py-1 font-mono text-xs uppercase tracking-wide text-brand">
               {product.category.name}
-            </p>
+            </span>
           ) : null}
 
           <h1 className="font-display text-3xl font-semibold text-ink dark:text-paper">
             {product.name}
           </h1>
 
-          <p className="font-mono text-2xl font-medium text-brand">
-            ${product.price.toFixed(2)}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="font-mono text-2xl font-medium text-brand">
+              ${product.price.toFixed(2)}
+            </p>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                available ? "bg-success/10 text-success" : "bg-slate/10 text-slate"
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${available ? "bg-success" : "bg-slate"}`}
+                aria-hidden
+              />
+              {available ? `In stock · ${product.stock} available` : "Out of stock"}
+            </span>
+          </div>
 
-          <p
-            className={`text-sm font-medium ${
-              available ? "text-success" : "text-slate"
-            }`}
-          >
-            {available ? `In stock · ${product.stock} available` : "Out of stock"}
-          </p>
-
-          {product.description ? (
-            <p className="text-slate">{product.description}</p>
+          {description ? (
+            <div className="border-t border-slate/10 pt-4">
+              <p className="min-w-0 whitespace-pre-wrap break-words leading-relaxed text-slate">
+                {descriptionExpanded ? description : preview}
+                {!descriptionExpanded && hasMore ? "…" : null}
+              </p>
+              {hasMore ? (
+                <button
+                  type="button"
+                  onClick={() => setDescriptionExpanded((v) => !v)}
+                  className="mt-2 text-sm font-medium text-brand hover:underline"
+                >
+                  {descriptionExpanded ? "See less" : "See more"}
+                </button>
+              ) : null}
+            </div>
           ) : null}
 
           <button
             type="button"
             disabled={!available}
-            className="mt-4 w-full max-w-xs rounded-full bg-brand px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-4 flex w-full max-w-xs items-center justify-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
           >
+            <ShoppingCart size={16} />
             Add to Cart
           </button>
         </div>

@@ -30,11 +30,13 @@ function ProductCatalogInner() {
   const query = (searchParams.get("q") ?? "").trim();
   const categoryId = searchParams.get("category");
   const sort = parseSort(searchParams.get("sort"));
-  const page = Math.max(1, Math.trunc(Number(searchParams.get("page"))) || 1);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
+  const [pagesLoaded, setPagesLoaded] = useState(1);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchInput, setSearchInput] = useState(query);
 
@@ -60,14 +62,16 @@ function ProductCatalogInner() {
     };
   }, []);
 
+  // Filters changed — reset to a fresh first page (replaces the list, doesn't append).
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setStatus("loading");
+      setLoadMoreError(false);
       try {
         const params = new URLSearchParams({
-          page: String(page),
+          page: "1",
           pageSize: String(PAGE_SIZE),
           sort,
         });
@@ -80,6 +84,7 @@ function ProductCatalogInner() {
         if (!cancelled) {
           setProducts(Array.isArray(data.items) ? data.items : []);
           setTotal(typeof data.total === "number" ? data.total : 0);
+          setPagesLoaded(1);
           setStatus("ready");
         }
       } catch {
@@ -91,15 +96,40 @@ function ProductCatalogInner() {
     return () => {
       cancelled = true;
     };
-  }, [page, query, categoryId, sort]);
+  }, [query, categoryId, sort]);
 
-  function updateParams(patch: Record<string, string | null>, resetPage = false) {
+  async function loadMore() {
+    const nextPage = pagesLoaded + 1;
+    setLoadingMore(true);
+    setLoadMoreError(false);
+    try {
+      const params = new URLSearchParams({
+        page: String(nextPage),
+        pageSize: String(PAGE_SIZE),
+        sort,
+      });
+      if (query) params.set("q", query);
+      if (categoryId) params.set("categoryId", categoryId);
+
+      const res = await apiFetch(`/api/products?${params.toString()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: ProductCatalogResponse = await res.json();
+      setProducts((prev) => [...prev, ...(Array.isArray(data.items) ? data.items : [])]);
+      setTotal(typeof data.total === "number" ? data.total : 0);
+      setPagesLoaded(nextPage);
+    } catch {
+      setLoadMoreError(true);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  function updateParams(patch: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(patch)) {
       if (value === null || value === "") params.delete(key);
       else params.set(key, value);
     }
-    if (resetPage) params.delete("page");
     const qs = params.toString();
     router.push(qs ? `/products?${qs}` : "/products");
   }
@@ -107,10 +137,10 @@ function ProductCatalogInner() {
   function onSearchSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmed = searchInput.trim();
-    updateParams({ q: trimmed || null }, true);
+    updateParams({ q: trimmed || null });
   }
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const canLoadMore = products.length < total;
   const activeCategoryName = categories.find((c) => c.id === categoryId)?.name;
 
   const chipClass = (active: boolean) =>
@@ -158,7 +188,7 @@ function ProductCatalogInner() {
           <select
             value={sort}
             onChange={(e) =>
-              updateParams({ sort: e.target.value === "newest" ? null : e.target.value }, true)
+              updateParams({ sort: e.target.value === "newest" ? null : e.target.value })
             }
             className="rounded-full border border-slate/20 bg-paper px-4 py-2 pr-8 text-sm text-ink outline-none dark:bg-ink-soft dark:text-paper"
           >
@@ -174,7 +204,7 @@ function ProductCatalogInner() {
       <nav className="mb-8 flex gap-2 overflow-x-auto pb-1">
         <button
           type="button"
-          onClick={() => updateParams({ category: null }, true)}
+          onClick={() => updateParams({ category: null })}
           className={chipClass(!categoryId)}
         >
           All
@@ -183,7 +213,7 @@ function ProductCatalogInner() {
           <button
             key={cat.id}
             type="button"
-            onClick={() => updateParams({ category: cat.id }, true)}
+            onClick={() => updateParams({ category: cat.id })}
             className={chipClass(categoryId === cat.id)}
           >
             {cat.name}
@@ -210,8 +240,7 @@ function ProductCatalogInner() {
       {status === "ready" && products.length > 0 && (
         <>
           <p className="mb-4 text-xs text-slate">
-            Showing {(page - 1) * PAGE_SIZE + 1}–
-            {Math.min(page * PAGE_SIZE, total)} of {total}
+            Showing {products.length} of {total}
           </p>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product) => (
@@ -219,29 +248,21 @@ function ProductCatalogInner() {
             ))}
           </div>
 
-          {totalPages > 1 && (
-            <div className="mt-10 flex items-center justify-center gap-3">
+          {canLoadMore && (
+            <div className="mt-10 flex flex-col items-center gap-2">
               <button
                 type="button"
-                disabled={page <= 1}
-                onClick={() =>
-                  updateParams({ page: page <= 2 ? null : String(page - 1) })
-                }
-                className="rounded-full border border-slate/20 px-4 py-2 text-sm text-ink transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-40 dark:text-paper"
+                disabled={loadingMore}
+                onClick={loadMore}
+                className="rounded-full border border-slate/20 px-6 py-2.5 text-sm font-medium text-ink transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-60 dark:text-paper"
               >
-                Previous
+                {loadingMore ? "Loading…" : "Show more products"}
               </button>
-              <span className="font-mono text-sm text-slate">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                type="button"
-                disabled={page >= totalPages}
-                onClick={() => updateParams({ page: String(page + 1) })}
-                className="rounded-full border border-slate/20 px-4 py-2 text-sm text-ink transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-40 dark:text-paper"
-              >
-                Next
-              </button>
+              {loadMoreError && (
+                <p className="text-xs text-slate">
+                  Couldn’t load more products. Try again.
+                </p>
+              )}
             </div>
           )}
         </>

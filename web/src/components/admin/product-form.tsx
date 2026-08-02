@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import type { AdminProduct } from "@/lib/product";
-import { PRODUCT_STATUSES } from "@/lib/product";
+import { PRODUCT_DESCRIPTION_MAX_LENGTH, PRODUCT_STATUSES } from "@/lib/product";
 import type { AdminCategory } from "@/lib/category";
 import { uploadAdminProductImage, type AdminProductInput } from "@/lib/admin/products";
 
@@ -104,6 +104,12 @@ export default function ProductForm({ initial, categories, onSubmit, onCancel }:
       setError("Stock quantity must be a non-negative number");
       return;
     }
+    if (description.trim().length > PRODUCT_DESCRIPTION_MAX_LENGTH) {
+      setError(
+        `Description is too long (${description.trim().length.toLocaleString()} / ${PRODUCT_DESCRIPTION_MAX_LENGTH.toLocaleString()} characters)`
+      );
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -178,9 +184,17 @@ export default function ProductForm({ initial, categories, onSubmit, onCancel }:
         <textarea
           value={description ?? ""}
           onChange={(e) => setDescription(e.target.value)}
+          maxLength={PRODUCT_DESCRIPTION_MAX_LENGTH}
           className={`${inputClass} min-h-20 resize-y`}
-          placeholder="Short product description"
+          placeholder="Short product description (about 5-8 paragraphs max)"
         />
+        <span
+          className={`self-end font-mono text-xs ${
+            description.length > PRODUCT_DESCRIPTION_MAX_LENGTH * 0.9 ? "text-amber" : "text-slate/60"
+          }`}
+        >
+          {description.length.toLocaleString()} / {PRODUCT_DESCRIPTION_MAX_LENGTH.toLocaleString()}
+        </span>
       </label>
 
       <div className="grid grid-cols-2 gap-4">

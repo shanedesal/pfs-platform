@@ -2,7 +2,7 @@
 
 ## Overview
 
-Products have a required **cover** image (`Product.imageUrl`) for storefront grids (homepage featured, category filter, search). A separate `ProductImage` table holds optional **gallery** shots (Shopee-style extra photos) for a future product detail page. Seed data currently uses public Supabase Storage URLs; admin upload and private buckets come later.
+Products have a required **cover** image (`Product.imageUrl`) for storefront grids (homepage featured, category filter, search). A separate `ProductImage` table holds optional **gallery** shots (Shopee-style extra photos), rendered as a clickable thumbnail strip on the storefront product detail page. Seed data currently uses public Supabase Storage URLs; admin upload and private buckets come later.
 
 ## Behavior / rules
 
@@ -24,8 +24,8 @@ Products have a required **cover** image (`Product.imageUrl`) for storefront gri
 | Fields | `url` (required), `sortOrder` (default 0), timestamps |
 | Delete | Cascade when product is deleted |
 | Seed | Empty for all products (no gallery rows yet) |
-| List APIs | Not included in homepage/search responses (cover only) |
-| Detail API | Not implemented yet |
+| List APIs | Not included in homepage/search/catalog responses (cover only) |
+| Detail API | `GET /api/products/:id` includes `images` (`id`, `url`, `sortOrder`), ordered by `sortOrder` ascending |
 
 ### Create product (`POST /api/products`)
 
@@ -50,7 +50,8 @@ Products have a required **cover** image (`Product.imageUrl`) for storefront gri
 ### Web
 
 - `web/src/components/storefront/product-card.tsx` — renders cover via `<img>`; PFS placeholder if empty
-- `web/src/lib/product.ts` — `imageUrl: string`
+- `web/src/components/storefront/product-detail.tsx` — builds a gallery list (`[cover, ...images]`), shows the selected image large with thumbnails below; clicking a thumbnail swaps the main image (local state, resets when the product changes)
+- `web/src/lib/product.ts` — `imageUrl: string`, `images?: ProductGalleryImage[]`
 
 ## Changes
 
@@ -58,3 +59,4 @@ Products have a required **cover** image (`Product.imageUrl`) for storefront gri
 - Seed sets cover URLs; gallery left empty
 - `createProduct` validates required `imageUrl`
 - Product cards display cover images from the API
+- Storefront product detail page now renders the gallery (cover + `ProductImage`s) as clickable thumbnails instead of showing only the cover

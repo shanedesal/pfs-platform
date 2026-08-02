@@ -4,6 +4,24 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-02 — Product catalog: "Show more" replaces page-number pagination
+
+- **Doc:** `docs/product-listing.md`
+- **What changed:** `/products` used Previous/Next buttons with a `?page=` URL param, replacing the grid on every click. Swapped that for a "Show more products" button that fetches the next page and appends it to the existing grid, so browsing feels continuous instead of resetting scroll position each click. Search/category/sort changes still fully reset the grid to a fresh first page (no mixing results across filters). Dropped `?page=` from the URL since there's no longer a discrete "page" to bookmark — changing a filter or reloading always starts from the top.
+- **Files:** `web/src/components/storefront/product-catalog.tsx`, `docs/product-listing.md`
+
+## 2026-08-02 — Product detail redesign, image gallery, description overflow fix
+
+- **Doc:** `docs/product-listing.md` (also updated `docs/product-images.md`)
+- **What changed:** A description with no whitespace (one long unbroken run of characters) forced the page into endless horizontal scroll, because the text had no way to wrap. Description text now always wraps (`break-words` + `min-w-0` on the flex/grid item), descriptions are capped at 4,000 characters on the admin form (`maxLength` + live counter) and re-validated server-side, and the storefront detail page shows only ~1 paragraph with a "See more"/"See less" toggle for longer text. Also redesigned the detail page (category pill, in-stock/out-of-stock pill, restyled Add to Cart) and added a clickable image gallery (cover + `ProductImage` gallery shots), which the public detail API already returned but the page never rendered. Add to Cart remains UI-only — no cart state/backend added.
+- **Files:** `web/src/components/storefront/product-detail.tsx`, `web/src/components/admin/product-form.tsx`, `web/src/lib/product.ts`, `server/src/controllers/admin-products.controller.ts`, `docs/product-listing.md`, `docs/product-images.md`
+
+## 2026-08-02 — Docker web: exclude `.next` from image (chunk error)
+
+- **Doc:** `docs/docker-local-dev.md`
+- **What changed:** Browser error `can't infer type of chunk from URL app-pages-internals` came from a Turbopack `.next` cache baked into the web image (`COPY . .` with no ignore) and copied into the anonymous `/app/.next` volume, while the container ran webpack. Added `web/.dockerignore` and documented how to wipe the volume + rebuild.
+- **Files:** `web/.dockerignore`, `docs/docker-local-dev.md`
+
 ## 2026-08-02 — Docker web performance (webpack + heap)
 
 - **Doc:** `docs/docker-local-dev.md`

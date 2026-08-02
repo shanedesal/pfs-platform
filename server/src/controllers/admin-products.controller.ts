@@ -7,6 +7,8 @@ import { supabase, SUPABASE_STORAGE_BUCKET, isSupabaseConfigured } from "../conf
 const SEARCH_MAX_Q = 100;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+/** Keep in sync with PRODUCT_DESCRIPTION_MAX_LENGTH in web/src/lib/product.ts. */
+const DESCRIPTION_MAX_LENGTH = 4000;
 
 const PRODUCT_STATUSES = new Set<string>(Object.values(ProductStatus));
 
@@ -121,6 +123,10 @@ export const createAdminProduct = async (req: Request, res: Response) => {
       res.status(400).json({ message: "imageUrl is required" });
       return;
     }
+    if (typeof description === "string" && description.trim().length > DESCRIPTION_MAX_LENGTH) {
+      res.status(400).json({ message: `description must be at most ${DESCRIPTION_MAX_LENGTH} characters` });
+      return;
+    }
     const priceNum = Number(price);
     if (!Number.isFinite(priceNum) || priceNum < 0) {
       res.status(400).json({ message: "price must be a non-negative number" });
@@ -198,6 +204,10 @@ export const updateAdminProduct = async (req: Request, res: Response) => {
       data.name = name.trim();
     }
     if (description !== undefined) {
+      if (typeof description === "string" && description.trim().length > DESCRIPTION_MAX_LENGTH) {
+        res.status(400).json({ message: `description must be at most ${DESCRIPTION_MAX_LENGTH} characters` });
+        return;
+      }
       data.description = typeof description === "string" ? description.trim() || null : null;
     }
     if (price !== undefined) {
