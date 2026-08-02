@@ -19,7 +19,7 @@ The storefront product listing page at `/products` is the full catalog: search, 
 | Changing filters | Search/category/sort changes reset the grid back to the first page (no leftover items from a previous filter) |
 | Card fields | Image, name, price, category, stock availability, View Details, Add to Cart |
 | View Details | Links to `/products/[id]` (public detail endpoint) |
-| Add to Cart | UI only for now (disabled when unavailable); no cart state/backend yet |
+| Add to Cart | Customers only — adds to server-backed cart (guests → login; admins hidden). Catalog cards add 1; detail page has a quantity selector (1–stock). See `docs/shopping-cart.md` |
 | Detail image gallery | Cover image + any `ProductImage` gallery shots as clickable thumbnails; main image switches on click |
 | Detail description | Long descriptions collapse to ~1 paragraph (or first 480 chars) with a "See more" / "See less" toggle; text always wraps (`break-words`) so an unbroken run of characters can't force horizontal scroll |
 | Description length | Admin create/edit form caps descriptions at 4,000 characters (`PRODUCT_DESCRIPTION_MAX_LENGTH`), enforced client-side (`maxLength` + live counter) and server-side (`400` if exceeded) |

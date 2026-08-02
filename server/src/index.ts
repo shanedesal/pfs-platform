@@ -7,6 +7,7 @@ import productsRouter from "./routes/products";
 import homepageRouter from "./routes/homepage";
 import authRouter from "./routes/auth";
 import adminRouter from "./routes/admin";
+import cartRouter from "./routes/cart";
 import { requestLogger } from "./middleware/requestLogger";
 import { validateEnv } from "./utils/env";
 
@@ -39,6 +40,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/homepage", homepageRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/cart", cartRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

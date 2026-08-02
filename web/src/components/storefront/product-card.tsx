@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Product } from "@/lib/product";
 import { isProductAvailable } from "@/lib/product";
+import AddToCartButton from "./add-to-cart-button";
 
 export default function ProductCard({ product }: { product: Product }) {
   const available = isProductAvailable(product);
@@ -55,13 +56,11 @@ export default function ProductCard({ product }: { product: Product }) {
           >
             View Details
           </Link>
-          <button
-            type="button"
+          <AddToCartButton
+            productId={product.id}
             disabled={!available}
-            className="flex-1 rounded-full bg-brand px-3 py-2 text-xs font-medium text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Add to Cart
-          </button>
+            className="flex-1 px-3 py-2 text-xs"
+          />
         </div>
       </div>
     </article>

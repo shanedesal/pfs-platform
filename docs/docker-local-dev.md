@@ -66,6 +66,23 @@ docker compose restart web
 
 Warm navigations should land around sub-second; multi-second timings usually mean a fresh compile after restart.
 
+### Stale Prisma client after schema changes
+
+If a new model was added (e.g. `Cart`) while `pfs_server` was already running, API handlers may return generic `500` errors such as `Failed to add item to cart`. Server logs show `Cannot read properties of undefined (reading 'findUnique')` on `prisma.cart` — the running process still has an old generated client.
+
+Restart the server so startup re-runs `prisma generate`:
+
+```bash
+docker compose restart server
+```
+
+Or regenerate without a full restart:
+
+```bash
+docker compose exec server npx prisma generate
+docker compose restart server
+```
+
 Optional later: upgrade Next.js past 16.2.x for Turbopack memory-eviction improvements (needs explicit package approval).
 
 ## Changes

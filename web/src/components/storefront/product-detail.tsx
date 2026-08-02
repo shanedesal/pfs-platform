@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Product } from "@/lib/product";
 import { getDescriptionPreview, isProductAvailable } from "@/lib/product";
+import AddToCartButton from "./add-to-cart-button";
 
 type ProductDetailProps = {
   productId: string;
@@ -18,6 +19,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   );
   const [activeImage, setActiveImage] = useState(0);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,6 +28,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       setStatus("loading");
       setActiveImage(0);
       setDescriptionExpanded(false);
+      setQuantity(1);
       try {
         const res = await apiFetch(`/api/products/${encodeURIComponent(productId)}`);
         if (res.status === 404) {
@@ -195,14 +198,46 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
             </div>
           ) : null}
 
-          <button
-            type="button"
-            disabled={!available}
-            className="mt-4 flex w-full max-w-xs items-center justify-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <ShoppingCart size={16} />
-            Add to Cart
-          </button>
+          <div className="mt-4 flex max-w-xs flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-ink dark:text-paper">
+                Quantity
+              </span>
+              <div className="flex items-center rounded-full border border-slate/20">
+                <button
+                  type="button"
+                  aria-label="Decrease quantity"
+                  disabled={!available || quantity <= 1}
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="rounded-l-full px-3 py-2 text-slate transition hover:text-brand disabled:opacity-40"
+                >
+                  <Minus size={14} />
+                </button>
+                <span className="min-w-[2rem] text-center text-sm font-medium text-ink dark:text-paper">
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Increase quantity"
+                  disabled={!available || quantity >= product.stock}
+                  onClick={() =>
+                    setQuantity((q) => Math.min(product.stock, q + 1))
+                  }
+                  className="rounded-r-full px-3 py-2 text-slate transition hover:text-brand disabled:opacity-40"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            </div>
+
+            <AddToCartButton
+              productId={product.id}
+              quantity={quantity}
+              disabled={!available}
+              showIcon
+              className="w-full px-6 py-3 text-sm"
+            />
+          </div>
         </div>
       </div>
     </section>

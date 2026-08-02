@@ -4,6 +4,24 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-02 — Product detail: quantity selector before add to cart
+
+- **Doc:** `docs/product-listing.md`, `docs/shopping-cart.md`
+- **What changed:** Product detail page (`/products/[id]`) now shows +/- quantity controls (min 1, max current stock) before Add to Cart. Selected quantity is sent to `POST /api/cart/items`. Catalog cards still add one at a time.
+- **Files:** `web/src/components/storefront/product-detail.tsx`, `web/src/components/storefront/add-to-cart-button.tsx`, `docs/product-listing.md`, `docs/shopping-cart.md`
+
+## 2026-08-02 — Docker: stale Prisma client after schema change
+
+- **Doc:** `docs/docker-local-dev.md`
+- **What changed:** Documented that a running `pfs_server` container may need `prisma generate` + restart after new Prisma models are added; otherwise cart (and similar) endpoints return generic 500s because `prisma.<model>` is undefined in the old client.
+- **Files:** `docs/docker-local-dev.md`
+
+## 2026-08-02 — Shopping cart (customers only, DB-backed)
+
+- **Doc:** `docs/shopping-cart.md`
+- **What changed:** Customers can add products to a persistent cart, update quantities, remove items, view subtotal/total, and proceed to a checkout summary page. Cart is stored in PostgreSQL (`Cart` / `CartItem`) and survives refresh. Guests are sent to login; admins cannot add to cart (button hidden, no cart icon). Checkout place-order is a stub until payments/orders ship.
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260802040000_add_cart/`, `server/src/controllers/cart.controller.ts`, `server/src/routes/cart.ts`, `server/src/index.ts`, `web/src/lib/cart.ts`, `web/src/lib/cart-context.tsx`, `web/src/components/storefront/add-to-cart-button.tsx`, `web/src/components/storefront/cart-view.tsx`, `web/src/components/storefront/header.tsx`, `web/src/components/storefront/product-card.tsx`, `web/src/components/storefront/product-detail.tsx`, `web/src/app/cart/page.tsx`, `web/src/app/checkout/page.tsx`, `web/src/app/layout.tsx`, `web/src/app/login/page.tsx`, `docs/shopping-cart.md`, `docs/product-listing.md`
+
 ## 2026-08-02 — Product catalog: "Show more" replaces page-number pagination
 
 - **Doc:** `docs/product-listing.md`

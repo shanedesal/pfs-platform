@@ -7,16 +7,30 @@ import ThemeToggle from "@/components/theme-toggle";
 import Logo from "@/components/logo";
 import HeaderSearch from "./header-search";
 import { useAuth } from "@/lib/auth-context";
+import { useCart } from "@/lib/cart-context";
 
 function HeaderActions() {
   const { user, loading, logout } = useAuth();
+  const { cart } = useCart();
+  const showCart = user?.role === "CUSTOMER";
 
   return (
     <>
       <ThemeToggle />
-      <button aria-label="Cart" className="relative text-ink dark:text-paper">
-        <ShoppingCart size={20} />
-      </button>
+      {showCart ? (
+        <Link
+          href="/cart"
+          aria-label="Shopping cart"
+          className="relative text-ink dark:text-paper"
+        >
+          <ShoppingCart size={20} />
+          {cart.itemCount > 0 ? (
+            <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-medium text-white">
+              {cart.itemCount > 99 ? "99+" : cart.itemCount}
+            </span>
+          ) : null}
+        </Link>
+      ) : null}
 
       {loading ? (
         <div className="h-9 w-20 animate-pulse rounded-full bg-slate/10" />

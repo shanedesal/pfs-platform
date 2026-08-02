@@ -1,13 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 
+function safeRedirect(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/";
+  return raw;
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = safeRedirect(searchParams.get("redirect"));
   const { refetch } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +41,7 @@ export default function LoginPage() {
       }
 
       await refetch();
-      router.push(data.role === "ADMIN" ? "/admin" : "/");
+      router.push(data.role === "ADMIN" ? "/admin" : redirect);
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
