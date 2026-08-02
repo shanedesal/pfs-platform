@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-02 — Admin order management (table + details, status updates)
+
+- **Doc:** `docs/admin-orders.md` (also updated `docs/checkout-orders.md`, `docs/admin-dashboard.md`)
+- **What changed:** Admins can now manage orders from `/admin/orders` — a searchable/filterable/paginated table (order number, customer name, order date, total, payment method, status badge, "View Details") and a detail page at `/admin/orders/[orderNumber]` (customer info, delivery address, ordered products with quantities, subtotal, total, payment method, order notes, and a status dropdown to update the order). Extended `OrderStatus` with `PREPARING`, `SHIPPED`, and `COMPLETED` (previously only `PENDING`/`CONFIRMED`/`CANCELLED`) to support the full fulfillment workflow. New admin-only endpoints: `GET /api/admin/orders`, `GET /api/admin/orders/:orderNumber`, `PATCH /api/admin/orders/:orderNumber/status` — these are not owner-scoped, unlike the existing customer-only `/api/orders`. Extracted the shared order-formatting logic (`orderInclude`/`formatOrder`/`paramOrderNumber`) out of `orders.controller.ts` into `server/src/utils/order-formatting.ts` so the new admin controller doesn't duplicate it. Added an "Orders" entry to the admin sidebar.
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260802150000_extend_order_status/`, `server/src/utils/order-formatting.ts`, `server/src/controllers/orders.controller.ts`, `server/src/controllers/admin-orders.controller.ts`, `server/src/routes/admin.ts`, `web/src/lib/orders.ts`, `web/src/lib/admin/orders.ts`, `web/src/components/admin/order-status-badge.tsx`, `web/src/components/admin/sidebar.tsx`, `web/src/app/admin/orders/page.tsx`, `web/src/app/admin/orders/[orderNumber]/page.tsx`, `docs/admin-orders.md`, `docs/checkout-orders.md`, `docs/admin-dashboard.md`
+
 ## 2026-08-02 — Checkout now selects from saved address book
 
 - **Doc:** `docs/checkout-orders.md`

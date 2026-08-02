@@ -2,7 +2,7 @@
 
 ## Overview
 
-The admin section (`/admin`) is gated to authenticated users with the `ADMIN` role. It now has three screens sharing one shell: a **Dashboard** overview, **Products** ([`docs/admin-products.md`](./admin-products.md)), and **Categories** ([`docs/admin-categories.md`](./admin-categories.md)), navigated via a left sidebar. The dashboard itself shows summary cards for store activity — products, orders, customers, and sales. Only metrics backed by an existing table (products, customers) are wired to real data for now; order and sales metrics are placeholders until those features exist.
+The admin section (`/admin`) is gated to authenticated users with the `ADMIN` role. It now has four screens sharing one shell: a **Dashboard** overview, **Products** ([`docs/admin-products.md`](./admin-products.md)), **Categories** ([`docs/admin-categories.md`](./admin-categories.md)), and **Orders** ([`docs/admin-orders.md`](./admin-orders.md)), navigated via a left sidebar. The dashboard itself shows summary cards for store activity — products, orders, customers, and sales. Only metrics backed by an existing table (products, customers) are wired to real data for now; order and sales metrics are placeholders until the dashboard cards themselves are wired up (the underlying `Order` data now exists and is fully manageable from `/admin/orders`).
 
 ## Behavior / rules
 
@@ -13,7 +13,7 @@ The admin section (`/admin`) is gated to authenticated users with the `ADMIN` ro
 | Auth | Must be logged in |
 | Role | Must be `ADMIN`; non-admins are redirected to `/` |
 | Unauthenticated | Redirected to `/login` |
-| Shell | Admin pages share a top bar (brand, "Back to store", theme toggle, logout) separate from the storefront header, plus a left sidebar (`Dashboard` / `Products` / `Categories`) for navigating between admin sections |
+| Shell | Admin pages share a top bar (brand, "Back to store", theme toggle, logout) separate from the storefront header, plus a left sidebar (`Dashboard` / `Products` / `Categories` / `Orders`) for navigating between admin sections |
 
 ### Dashboard summary cards
 
@@ -49,7 +49,7 @@ The admin section (`/admin`) is gated to authenticated users with the `ADMIN` ro
 - `web/src/app/admin/layout.tsx` — role/auth guard (unchanged logic); renders `AdminHeader` (top bar) + a flex row of `AdminSidebar` (left) and `children` (main content) — shared by every `/admin/*` route
 - `web/src/components/admin/` — admin-only components (see [`docs/frontend-components.md`](./frontend-components.md)):
   - `admin/header.tsx` — admin top bar (logo, "Admin" badge, back-to-store link, theme toggle, logout); separate from the storefront `Header` since admin has no search/cart/account-dropdown concerns
-  - `admin/sidebar.tsx` — left nav (`Dashboard` / `Products` / `Categories`), active link highlighted via `usePathname()`
+  - `admin/sidebar.tsx` — left nav (`Dashboard` / `Products` / `Categories` / `Orders`), active link highlighted via `usePathname()`
   - `admin/stat-card.tsx` — dashboard summary card: label, icon, value (or "—"), optional "Coming soon" hint, loading skeleton
   - `admin/modal.tsx`, `admin/confirm-dialog.tsx` — shared dialog primitives used by the Products and Categories pages (see their docs) for add/edit forms and delete confirmations
 - `web/src/components/logo.tsx` — shared PFS wordmark (`/logo.svg`), used by both storefront and admin headers

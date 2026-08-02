@@ -14,6 +14,11 @@ import {
   updateAdminCategory,
   deleteAdminCategory,
 } from "../controllers/admin-categories.controller";
+import {
+  listAdminOrders,
+  getAdminOrder,
+  updateAdminOrderStatus,
+} from "../controllers/admin-orders.controller";
 import { authenticate, authorize } from "../middleware/auth.middleware";
 import { uploadSingleImage } from "../middleware/upload.middleware";
 
@@ -34,5 +39,9 @@ router.get("/categories", listAdminCategories);
 router.post("/categories", createAdminCategory);
 router.put("/categories/:id", updateAdminCategory);
 router.delete("/categories/:id", deleteAdminCategory);
+
+router.get("/orders", listAdminOrders);
+router.get("/orders/:orderNumber", getAdminOrder);
+router.patch("/orders/:orderNumber/status", updateAdminOrderStatus);
 
 export default router;

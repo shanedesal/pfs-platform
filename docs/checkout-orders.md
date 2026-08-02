@@ -69,6 +69,9 @@ enum PaymentMethod {
 enum OrderStatus {
   PENDING
   CONFIRMED
+  PREPARING
+  SHIPPED
+  COMPLETED
   CANCELLED
 }
 
@@ -96,7 +99,7 @@ model OrderItem {
 }
 ```
 
-Migration: `server/prisma/migrations/20260802100000_add_orders/`
+Migration: `server/prisma/migrations/20260802100000_add_orders/`. `OrderStatus` was later extended with `PREPARING`/`SHIPPED`/`COMPLETED` for admin order management — see [`docs/admin-orders.md`](./admin-orders.md).
 
 User profile field: `User.phoneNumber` (optional; required indirectly for checkout). Migration: `server/prisma/migrations/20260802110000_add_user_phone_number/`
 

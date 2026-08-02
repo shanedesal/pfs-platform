@@ -25,6 +25,9 @@ enum PaymentMethod {
 enum OrderStatus {
   PENDING
   CONFIRMED
+  PREPARING
+  SHIPPED
+  COMPLETED
   CANCELLED
 }
 

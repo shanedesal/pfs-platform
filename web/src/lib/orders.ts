@@ -2,7 +2,26 @@ import { authFetch } from "./api";
 
 export type PaymentMethod = "CASH_ON_DELIVERY" | "E_WALLET" | "BANK_TRANSFER";
 
-export type OrderStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
+export type OrderStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "PREPARING"
+  | "SHIPPED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export const ORDER_STATUSES: { value: OrderStatus; label: string }[] = [
+  { value: "PENDING", label: "Pending" },
+  { value: "CONFIRMED", label: "Confirmed" },
+  { value: "PREPARING", label: "Preparing" },
+  { value: "SHIPPED", label: "Shipped" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
+];
+
+export function orderStatusLabel(status: OrderStatus): string {
+  return ORDER_STATUSES.find((s) => s.value === status)?.label ?? status;
+}
 
 export type OrderItem = {
   productId: string;

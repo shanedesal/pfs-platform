@@ -1,22 +1,10 @@
 import { randomBytes } from "crypto";
 import { Request, Response } from "express";
-import { PaymentMethod, Prisma, ProductStatus } from "@prisma/client";
+import { PaymentMethod, ProductStatus } from "@prisma/client";
 import prisma from "../config/db";
+import { orderInclude, formatOrder, paramOrderNumber } from "../utils/order-formatting";
 
 const PAYMENT_METHODS = new Set<string>(Object.values(PaymentMethod));
-
-const orderInclude = {
-  items: {
-    orderBy: { id: "asc" as const },
-    include: {
-      product: {
-        select: { id: true, imageUrl: true },
-      },
-    },
-  },
-} satisfies Prisma.OrderInclude;
-
-type OrderWithItems = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
 
 function isProductPurchasable(product: {
   status: ProductStatus;
@@ -57,40 +45,6 @@ function formatDeliveryAddress(address: {
 }): string {
   const base = `${address.addressLine1}, ${address.addressLine2}, ${address.city}, ${address.province}`;
   return address.postalCode ? `${base} ${address.postalCode}` : base;
-}
-
-function formatOrder(order: OrderWithItems) {
-  const items = order.items.map((item) => ({
-    productId: item.productId,
-    productName: item.productName,
-    unitPrice: Number(item.unitPrice),
-    quantity: item.quantity,
-    lineTotal: Number(item.lineTotal),
-    imageUrl: item.product.imageUrl,
-  }));
-
-  return {
-    id: order.id,
-    orderNumber: order.orderNumber,
-    customerName: order.customerName,
-    email: order.email,
-    contactNumber: order.contactNumber,
-    deliveryAddress: order.deliveryAddress,
-    paymentMethod: order.paymentMethod,
-    orderNotes: order.orderNotes,
-    status: order.status,
-    subtotal: Number(order.subtotal),
-    total: Number(order.total),
-    items,
-    itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-    createdAt: order.createdAt.toISOString(),
-  };
-}
-
-function paramOrderNumber(raw: string | string[] | undefined): string {
-  if (typeof raw === "string") return raw.trim();
-  if (Array.isArray(raw) && typeof raw[0] === "string") return raw[0].trim();
-  return "";
 }
 
 /** POST /api/orders — place order from the customer's cart. */
