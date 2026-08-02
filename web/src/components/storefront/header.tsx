@@ -3,9 +3,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Search, ShoppingCart, User, LogOut } from "lucide-react";
-import ThemeToggle from "./theme-toggle";
+import ThemeToggle from "@/components/theme-toggle";
+import Logo from "@/components/logo";
 import HeaderSearch from "./header-search";
-import Logo from "./logo";
 import { useAuth } from "@/lib/auth-context";
 
 function HeaderActions() {
@@ -85,9 +85,17 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate/10 bg-paper/80 backdrop-blur-md dark:bg-ink/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-        <Link href="/">
-          <Logo />
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/">
+            <Logo />
+          </Link>
+          <Link
+            href="/products"
+            className="hidden text-sm text-ink transition hover:text-brand md:inline dark:text-paper"
+          >
+            Products
+          </Link>
+        </div>
 
         <Suspense fallback={<SearchFallback />}>
           <HeaderSearch endActions={<HeaderActions />} />

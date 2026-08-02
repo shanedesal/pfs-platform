@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
+import { ProductStatus } from "@prisma/client";
 import prisma from "../config/db";
 
 /** Featured products for the storefront homepage (not a general catalog API). */
 export const getHomepageFeatured = async (_req: Request, res: Response) => {
   try {
     const products = await prisma.product.findMany({
+      where: { status: { not: ProductStatus.INACTIVE } },
       take: 8,
       orderBy: { createdAt: "desc" },
       select: {
@@ -14,6 +16,8 @@ export const getHomepageFeatured = async (_req: Request, res: Response) => {
         price: true,
         stock: true,
         imageUrl: true,
+        status: true,
+        category: { select: { id: true, name: true } },
       },
     });
 

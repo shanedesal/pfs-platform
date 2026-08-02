@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Hero() {
   return (
     <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
@@ -13,9 +15,12 @@ export default function Hero() {
           markups, no guesswork, just fair tags on everything.
         </p>
         <div className="mt-6 flex gap-3">
-          <button className="rounded-full bg-brand px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-dark">
+          <Link
+            href="/products"
+            className="rounded-full bg-brand px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-dark"
+          >
             Browse Products
-          </button>
+          </Link>
         </div>
       </div>
     </section>

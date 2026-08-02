@@ -4,6 +4,18 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-02 — Storefront vs admin component folders
+
+- **Doc:** `docs/frontend-components.md` (paths updated in homepage/product/admin docs)
+- **What changed:** Moved customer-facing UI into `web/src/components/storefront/`, keeping `web/src/components/admin/` for admin-only UI and shared `logo` / `theme-toggle` at the components root. Import paths and docs updated accordingly; no behavior change.
+- **Files:** `web/src/components/storefront/*`, `web/src/app/page.tsx`, `web/src/app/products/page.tsx`, `web/src/app/products/[id]/page.tsx`, `docs/frontend-components.md`, `docs/product-listing.md`, `docs/product-search.md`, `docs/homepage-featured.md`, `docs/homepage-footer.md`, `docs/product-images.md`, `docs/admin-dashboard.md`
+
+## 2026-08-02 — Storefront product listing page
+
+- **Doc:** `docs/product-listing.md` (also updated `docs/product-search.md`, `docs/homepage-featured.md`)
+- **What changed:** Added a dedicated `/products` catalog with search, category filter, price sorting, and pagination (default 12/page). `GET /api/products` is now a paginated public catalog (excludes inactive); added `GET /api/products/:id` plus a simple detail page. Homepage/header CTAs and search now route into the catalog; seed expanded to 12 sample products.
+- **Files:** `server/src/controllers/products.controller.ts`, `server/src/routes/products.ts`, `server/src/controllers/homepage.controller.ts`, `server/prisma/seed.ts`, `web/src/app/products/page.tsx`, `web/src/app/products/[id]/page.tsx`, `web/src/components/product-catalog.tsx`, `web/src/components/product-detail.tsx`, `web/src/components/product-card.tsx`, `web/src/components/featured-products.tsx`, `web/src/components/category-nav.tsx`, `web/src/components/hero.tsx`, `web/src/components/header.tsx`, `web/src/components/header-search.tsx`, `web/src/app/page.tsx`, `web/src/lib/product.ts`, `docs/product-listing.md`, `docs/product-search.md`, `docs/homepage-featured.md`
+
 ## 2026-08-01 — Admin product filter selects dark-mode fix
 
 - **Doc:** `docs/admin-products.md`

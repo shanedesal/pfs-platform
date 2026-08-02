@@ -40,10 +40,10 @@ export default function HeaderSearch({ endActions }: HeaderSearchProps) {
     const trimmed = query.trim();
     setMobileOpen(false);
     if (!trimmed) {
-      router.push("/");
+      router.push("/products");
       return;
     }
-    router.push(`/?q=${encodeURIComponent(trimmed)}`);
+    router.push(`/products?q=${encodeURIComponent(trimmed)}`);
   }
 
   return (

@@ -1,3 +1,11 @@
+export type ProductStatus = "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
+
+export const PRODUCT_STATUSES: { value: ProductStatus; label: string }[] = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
+  { value: "OUT_OF_STOCK", label: "Out of Stock" },
+];
+
 export type Product = {
   id: string;
   name: string;
@@ -6,15 +14,22 @@ export type Product = {
   stock: number;
   /** Cover / thumbnail URL (required). */
   imageUrl: string;
+  /** Present on storefront catalog/detail responses; omitted on older homepage payloads. */
+  status?: ProductStatus;
+  category?: { id: string; name: string } | null;
 };
 
-export type ProductStatus = "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
+export type ProductCatalogSort = "newest" | "price-asc" | "price-desc";
 
-export const PRODUCT_STATUSES: { value: ProductStatus; label: string }[] = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-  { value: "OUT_OF_STOCK", label: "Out of Stock" },
-];
+export type ProductCatalogResponse = {
+  items: Product[];
+  total: number;
+  page: number;
+  pageSize: number;
+  sort: ProductCatalogSort;
+  q?: string;
+  categoryId?: string;
+};
 
 export type ProductGalleryImage = {
   id: string;
@@ -30,3 +45,8 @@ export type AdminProduct = Product & {
   /** Gallery — only present on the single-product (edit) response, not the list. */
   images?: ProductGalleryImage[];
 };
+
+export function isProductAvailable(product: Product): boolean {
+  if (product.status === "OUT_OF_STOCK") return false;
+  return product.stock > 0;
+}

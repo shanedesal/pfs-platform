@@ -47,14 +47,14 @@ The admin section (`/admin`) is gated to authenticated users with the `ADMIN` ro
 ### Web
 
 - `web/src/app/admin/layout.tsx` — role/auth guard (unchanged logic); renders `AdminHeader` (top bar) + a flex row of `AdminSidebar` (left) and `children` (main content) — shared by every `/admin/*` route
-- `web/src/components/admin/` — admin-only components, kept separate from shared/storefront components in `web/src/components/`:
+- `web/src/components/admin/` — admin-only components (see [`docs/frontend-components.md`](./frontend-components.md)):
   - `admin/header.tsx` — admin top bar (logo, "Admin" badge, back-to-store link, theme toggle, logout); separate from the storefront `Header` since admin has no search/cart/account-dropdown concerns
   - `admin/sidebar.tsx` — left nav (`Dashboard` / `Products` / `Categories`), active link highlighted via `usePathname()`
   - `admin/stat-card.tsx` — dashboard summary card: label, icon, value (or "—"), optional "Coming soon" hint, loading skeleton
   - `admin/modal.tsx`, `admin/confirm-dialog.tsx` — shared dialog primitives used by the Products and Categories pages (see their docs) for add/edit forms and delete confirmations
-- `web/src/components/logo.tsx` — shared PFS wordmark (`/logo.svg`), used by both the storefront `Header` and `admin/header.tsx` so sizing/markup isn't duplicated
+- `web/src/components/logo.tsx` — shared PFS wordmark (`/logo.svg`), used by both storefront and admin headers
 - `web/src/app/admin/page.tsx` — fetches `/api/admin/dashboard-stats` via `authFetch` and renders the six summary cards using `admin/stat-card.tsx`
-- `web/src/lib/admin/dashboard.ts` — `DashboardStats` type; admin-only `lib` code lives under `web/src/lib/admin/`, mirroring the `web/src/components/admin/` split (see [`docs/admin-products.md`](./admin-products.md) / [`docs/admin-categories.md`](./admin-categories.md))
+- `web/src/lib/admin/dashboard.ts` — `DashboardStats` type; admin-only `lib` code lives under `web/src/lib/admin/`, mirroring `web/src/components/admin/`
 - Same fonts/colors/tokens as the storefront (`--color-brand`, `--color-ink`, `--color-paper`, `--color-slate`, `font-display`); no new design tokens introduced
 
 ## Changes

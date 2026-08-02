@@ -2,7 +2,7 @@
 
 ## Overview
 
-The storefront homepage footer (`web/src/components/footer.tsx`) gives visitors contact information and social media links alongside the existing copyright and legal links, so the homepage doesn't dead-end with just a copyright line.
+The storefront homepage footer (`web/src/components/storefront/footer.tsx`) gives visitors contact information and social media links alongside the existing copyright and legal links, so the homepage doesn't dead-end with just a copyright line.
 
 ## Behavior / rules
 
@@ -17,12 +17,12 @@ The storefront homepage footer (`web/src/components/footer.tsx`) gives visitors 
 
 ## Implementation
 
-- `web/src/components/footer.tsx` — three-column layout (brand/tagline, contact, social) above a copyright + legal-links row
-- `web/src/components/social-icons.tsx` — small inline SVG brand glyphs (`FacebookIcon`, `InstagramIcon`, `XIcon`, `LinkedinIcon`); added because `lucide-react` ships no trademarked brand icons, avoiding a new dependency
+- `web/src/components/storefront/footer.tsx` — three-column layout (brand/tagline, contact, social) above a copyright + legal-links row
+- `web/src/components/storefront/social-icons.tsx` — small inline SVG brand glyphs (`FacebookIcon`, `InstagramIcon`, `XIcon`, `LinkedinIcon`); added because `lucide-react` ships no trademarked brand icons, avoiding a new dependency
 - Contact icons (mail, phone, pin) reuse the existing `lucide-react` dependency
-- `Logo` component (`web/src/components/logo.tsx`) reused for the footer brand mark, consistent with the header
+- Shared `Logo` (`web/src/components/logo.tsx`) reused for the footer brand mark, consistent with the header
 
 ## Changes
 
-- Added `web/src/components/social-icons.tsx` with dummy social brand icons
-- Expanded `web/src/components/footer.tsx` with a Contact column (dummy email/phone/address) and a Follow us column (dummy Facebook/Instagram/X/LinkedIn links), keeping the existing copyright + Help/Terms/Privacy row
+- Added `web/src/components/storefront/social-icons.tsx` with dummy social brand icons
+- Expanded `web/src/components/storefront/footer.tsx` with a Contact column (dummy email/phone/address) and a Follow us column (dummy Facebook/Instagram/X/LinkedIn links), keeping the existing copyright + Help/Terms/Privacy row

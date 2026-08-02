@@ -5,11 +5,8 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import type { Category } from "@/lib/category";
 
-export default function CategoryNav({
-  activeCategoryId = null,
-}: {
-  activeCategoryId?: string | null;
-}) {
+/** Homepage category chips — each chip opens the full catalog filtered by category. */
+export default function CategoryNav() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -39,10 +36,10 @@ export default function CategoryNav({
 
   function selectCategory(categoryId: string | null) {
     if (!categoryId) {
-      router.push("/");
+      router.push("/products");
       return;
     }
-    router.push(`/?category=${encodeURIComponent(categoryId)}`);
+    router.push(`/products?category=${encodeURIComponent(categoryId)}`);
   }
 
   if (status === "loading") {
@@ -61,19 +58,15 @@ export default function CategoryNav({
     );
   }
 
-  const chipClass = (active: boolean) =>
-    `shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${
-      active
-        ? "border-brand bg-brand text-white"
-        : "border-slate/20 text-slate hover:border-brand hover:text-brand"
-    }`;
+  const chipClass =
+    "shrink-0 rounded-full border border-slate/20 px-4 py-1.5 text-sm text-slate transition hover:border-brand hover:text-brand";
 
   return (
     <nav className="flex gap-2 overflow-x-auto px-6 pb-2 md:justify-center">
       <button
         type="button"
         onClick={() => selectCategory(null)}
-        className={chipClass(!activeCategoryId)}
+        className={chipClass}
       >
         All
       </button>
@@ -82,7 +75,7 @@ export default function CategoryNav({
           key={cat.id}
           type="button"
           onClick={() => selectCategory(cat.id)}
-          className={chipClass(activeCategoryId === cat.id)}
+          className={chipClass}
         >
           {cat.name}
         </button>

@@ -78,6 +78,36 @@ const mockProducts = [
     badge: "Trending",
     imageUrl: `${STORAGE_BASE}/merino.jpg`,
   },
+  {
+    id: "9",
+    name: "Matte Lip Color Set",
+    category: "Beauty",
+    price: 32.5,
+    badge: "New",
+    imageUrl: `${STORAGE_BASE}/merino.jpg`,
+  },
+  {
+    id: "10",
+    name: "Adjustable Yoga Mat",
+    category: "Sports",
+    price: 39.99,
+    imageUrl: `${STORAGE_BASE}/linenblanket.jpg`,
+  },
+  {
+    id: "11",
+    name: "Wooden Building Blocks",
+    category: "Toys",
+    price: 27.0,
+    badge: "Best Seller",
+    imageUrl: `${STORAGE_BASE}/ceramiccoffeeset.jpg`,
+  },
+  {
+    id: "12",
+    name: "Trail Running Cap",
+    category: "Sports",
+    price: 22.0,
+    imageUrl: `${STORAGE_BASE}/Minimalistbpack.jpg`,
+  },
 ];
 
 async function main() {

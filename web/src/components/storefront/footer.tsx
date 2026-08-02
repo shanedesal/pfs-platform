@@ -1,5 +1,5 @@
 import { Mail, MapPin, Phone } from "lucide-react";
-import Logo from "./logo";
+import Logo from "@/components/logo";
 import {
   FacebookIcon,
   InstagramIcon,

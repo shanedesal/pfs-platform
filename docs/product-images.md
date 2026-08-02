@@ -49,7 +49,7 @@ Products have a required **cover** image (`Product.imageUrl`) for storefront gri
 
 ### Web
 
-- `web/src/components/product-card.tsx` — renders cover via `<img>`; PFS placeholder if empty
+- `web/src/components/storefront/product-card.tsx` — renders cover via `<img>`; PFS placeholder if empty
 - `web/src/lib/product.ts` — `imageUrl: string`
 
 ## Changes

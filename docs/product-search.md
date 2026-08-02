@@ -2,25 +2,21 @@
 
 ## Overview
 
-Storefront product search lets visitors find products by name or description from the header search bar. Results render on the homepage. The API is public — no login required.
+Storefront product search lets visitors find products by name or description from the header search bar. Results render on the **product listing page** (`/products`). The API is public — no login required.
+
+The dedicated `GET /api/products/search` endpoint remains available; the catalog page primarily uses the paginated `GET /api/products?q=` endpoint (see `docs/product-listing.md`).
 
 ## Behavior / rules
 
 | Rule | Detail |
 |------|--------|
 | Public | No auth required |
-| Query | Required `q` query param (trimmed); empty → `400` |
-| Max query length | 100 characters (excess truncated) |
-| Match | Case-insensitive `contains` on `name` **or** `description` |
-| Limit | At most 48 products |
-| Order | Newest first (`createdAt` desc) |
-| Fields | Same product shape as homepage featured: `id`, `name`, `description`, `price` (number), `stock`, `imageUrl` (required cover) |
-| Response | `{ q, products }` |
-| Empty results | Homepage shows a short empty-state message |
-| Failure | Homepage shows a short error message; does not fall back to mock data |
-| UI entry | Header search — inline form on md+; on smaller screens a search icon opens a full-width bar under the header. Submits to `/?q=…` |
+| UI entry | Header search — inline form on md+; on smaller screens a search icon opens a full-width bar under the header |
+| Navigation | Submits to `/products?q=…` (empty query → `/products`) |
 | Mobile | Search icon (next to theme/cart) toggles the bar; Escape or submit closes it; input auto-focuses when opened |
-| Clear | “Clear search” link returns to `/` (hero + featured) |
+| Catalog search | Also available on `/products` itself (same `q` param) |
+| Match (catalog) | Case-insensitive `contains` on `name` **or** `description`; excludes `INACTIVE` |
+| Legacy endpoint | `GET /api/products/search?q=` — required `q`, max 100 chars, limit 48, newest first |
 
 ## Implementation
 
@@ -28,21 +24,17 @@ Storefront product search lets visitors find products by name or description fro
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
-| GET | `/api/products/search?q=` | Public | Search products by name/description |
-
-- Controller: `searchProducts` in `server/src/controllers/products.controller.ts`
-- Router: `GET /search` on `server/src/routes/products.ts` (mounted at `/api/products`)
+| GET | `/api/products?q=&page=&pageSize=&sort=&categoryId=` | Public | Preferred: catalog search with pagination |
+| GET | `/api/products/search?q=` | Public | Legacy/simple search (`{ q, products }`) |
 
 ### Web
 
-- `web/src/components/header-search.tsx` — controlled search form (desktop + mobile toggle/panel); navigates to `/?q=…`
-- `web/src/components/header.tsx` — wraps search in `Suspense` for `useSearchParams`; passes trailing header actions into search so the mobile icon sits with theme/cart
-- `web/src/components/search-results.tsx` — fetches via `apiFetch`, renders `ProductCard` grid
-- `web/src/app/page.tsx` — when `q` is present, shows search results instead of hero/categories/featured
+- `web/src/components/storefront/header-search.tsx` — controlled search form; navigates to `/products?q=…`
+- `web/src/components/storefront/header.tsx` — wraps search in `Suspense` for `useSearchParams`
+- `web/src/components/storefront/product-catalog.tsx` — reads `q` from the URL and fetches the catalog API
 
 ## Changes
 
-- Added public `GET /api/products/search`
-- Wired header search to homepage `?q=` flow
-- Added search results section on the homepage
-- Added mobile header search: icon toggle opens a full-width search bar under the sticky header (desktop inline bar unchanged)
+- Header search now targets `/products?q=…` instead of homepage `/?q=…`
+- Homepage no longer renders a separate search-results mode
+- Catalog page owns search UX together with category filter and sort
