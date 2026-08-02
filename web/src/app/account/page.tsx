@@ -3,7 +3,8 @@
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Mail, Phone, Calendar, LogOut } from "lucide-react";
+import Link from "next/link";
+import { Mail, Phone, Calendar, LogOut, Package, ChevronRight } from "lucide-react";
 import Header from "@/components/storefront/header";
 import Footer from "@/components/storefront/footer";
 import CheckoutProfileRequired from "@/components/storefront/checkout-profile-required";
@@ -110,6 +111,20 @@ export default function AccountPage() {
             </div>
           </div>
         </section>
+
+        {/* Order history (customers only) */}
+        {user.role === "CUSTOMER" ? (
+          <Link
+            href="/account/orders"
+            className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-slate/15 px-5 py-4 transition hover:border-brand"
+          >
+            <div className="flex items-center gap-3 text-sm text-ink dark:text-paper">
+              <Package size={16} className="shrink-0" />
+              My Orders
+            </div>
+            <ChevronRight size={16} className="text-slate" />
+          </Link>
+        ) : null}
 
         {/* Delivery addresses (customers only) */}
         {user.role === "CUSTOMER" ? <AddressBook /> : null}

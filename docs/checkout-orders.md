@@ -99,7 +99,7 @@ model OrderItem {
 }
 ```
 
-Migration: `server/prisma/migrations/20260802100000_add_orders/`. `OrderStatus` was later extended with `PREPARING`/`SHIPPED`/`COMPLETED` for admin order management — see [`docs/admin-orders.md`](./admin-orders.md).
+Migration: `server/prisma/migrations/20260802100000_add_orders/`. `OrderStatus` was later extended with `PREPARING`/`SHIPPED`/`COMPLETED` for admin order management — see [`docs/admin-orders.md`](./admin-orders.md). Customers can browse their order history, view details, and self-cancel a still-`PENDING` order — see [`docs/customer-order-management.md`](./customer-order-management.md).
 
 User profile field: `User.phoneNumber` (optional; required indirectly for checkout). Migration: `server/prisma/migrations/20260802110000_add_user_phone_number/`
 

@@ -23,6 +23,11 @@ export function orderStatusLabel(status: OrderStatus): string {
   return ORDER_STATUSES.find((s) => s.value === status)?.label ?? status;
 }
 
+/** Customers may only self-cancel while the order hasn't been confirmed by an admin yet. */
+export function canCancelOrder(status: OrderStatus): boolean {
+  return status === "PENDING";
+}
+
 export type OrderItem = {
   productId: string;
   productName: string;
@@ -53,6 +58,29 @@ export type PlaceOrderPayload = {
   addressId: string;
   paymentMethod: PaymentMethod;
   orderNotes?: string;
+};
+
+/** Row shape for the customer's order history list — lighter than the full `Order` detail. */
+export type OrderListItem = {
+  id: string;
+  orderNumber: string;
+  paymentMethod: PaymentMethod;
+  status: OrderStatus;
+  total: number;
+  createdAt: string;
+};
+
+export type OrderListParams = {
+  status?: OrderStatus | "";
+  page?: number;
+  pageSize?: number;
+};
+
+export type OrderListResponse = {
+  items: OrderListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
 };
 
 export const PAYMENT_METHOD_OPTIONS: { value: PaymentMethod; label: string }[] = [
@@ -87,6 +115,31 @@ export async function fetchOrder(orderNumber: string): Promise<Order> {
   );
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, "Failed to load order"));
+  }
+  return res.json();
+}
+
+/** GET /api/orders — the signed-in customer's own order history. */
+export async function listMyOrders(params: OrderListParams = {}): Promise<OrderListResponse> {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status", params.status);
+  query.set("page", String(params.page ?? 1));
+  query.set("pageSize", String(params.pageSize ?? 10));
+
+  const res = await authFetch(`/api/orders?${query.toString()}`);
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, "Failed to load orders"));
+  }
+  return res.json();
+}
+
+/** PATCH /api/orders/:orderNumber/cancel — self-service cancellation while still `PENDING`. */
+export async function cancelOrder(orderNumber: string): Promise<Order> {
+  const res = await authFetch(`/api/orders/${encodeURIComponent(orderNumber)}/cancel`, {
+    method: "PATCH",
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, "Failed to cancel order"));
   }
   return res.json();
 }

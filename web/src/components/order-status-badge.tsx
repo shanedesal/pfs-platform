@@ -9,6 +9,7 @@ const STATUS_BADGE: Record<OrderStatus, string> = {
   CANCELLED: "bg-red-500/10 text-red-500",
 };
 
+/** Shared status pill used by both the admin order views and customer order history/detail. */
 export default function OrderStatusBadge({ status }: { status: OrderStatus }) {
   return (
     <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_BADGE[status]}`}>

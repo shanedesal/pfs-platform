@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import OrderStatusBadge from "@/components/admin/order-status-badge";
+import OrderStatusBadge from "@/components/order-status-badge";
 import {
   ORDER_STATUSES,
   formatMoney,

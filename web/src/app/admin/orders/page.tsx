@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import OrderStatusBadge from "@/components/admin/order-status-badge";
+import OrderStatusBadge from "@/components/order-status-badge";
 import { ORDER_STATUSES, formatMoney, paymentMethodLabel, type OrderStatus } from "@/lib/orders";
 import { fetchAdminOrders, type AdminOrderListItem } from "@/lib/admin/orders";
 

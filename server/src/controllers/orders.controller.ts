@@ -1,10 +1,16 @@
 import { randomBytes } from "crypto";
 import { Request, Response } from "express";
-import { PaymentMethod, ProductStatus } from "@prisma/client";
+import { OrderStatus, PaymentMethod, Prisma, ProductStatus } from "@prisma/client";
 import prisma from "../config/db";
 import { orderInclude, formatOrder, paramOrderNumber } from "../utils/order-formatting";
 
 const PAYMENT_METHODS = new Set<string>(Object.values(PaymentMethod));
+const ORDER_STATUSES = new Set<string>(Object.values(OrderStatus));
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 50;
+
+/** Statuses a customer can still back out of — once confirmed, fulfillment has started. */
+const CANCELLABLE_STATUSES: OrderStatus[] = [OrderStatus.PENDING];
 
 function isProductPurchasable(product: {
   status: ProductStatus;
@@ -225,6 +231,69 @@ export const placeOrder = async (req: Request, res: Response) => {
   }
 };
 
+function serializeOrderListItem(order: {
+  id: string;
+  orderNumber: string;
+  paymentMethod: string;
+  status: string;
+  total: Prisma.Decimal;
+  createdAt: Date;
+}) {
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    paymentMethod: order.paymentMethod,
+    status: order.status,
+    total: Number(order.total),
+    createdAt: order.createdAt.toISOString(),
+  };
+}
+
+/** GET /api/orders — the signed-in customer's own order history (paginated, optional status filter). */
+export const listOrders = async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, Math.trunc(Number(req.query.page)) || 1);
+    const pageSize = Math.min(
+      MAX_PAGE_SIZE,
+      Math.max(1, Math.trunc(Number(req.query.pageSize)) || DEFAULT_PAGE_SIZE)
+    );
+    const statusParam = typeof req.query.status === "string" ? req.query.status.trim() : "";
+
+    const where: Prisma.OrderWhereInput = { userId: req.user!.userId };
+    if (statusParam && ORDER_STATUSES.has(statusParam)) {
+      where.status = statusParam as OrderStatus;
+    }
+
+    const [items, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        select: {
+          id: true,
+          orderNumber: true,
+          paymentMethod: true,
+          status: true,
+          total: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.order.count({ where }),
+    ]);
+
+    res.json({
+      items: items.map(serializeOrderListItem),
+      total,
+      page,
+      pageSize,
+    });
+  } catch (err) {
+    console.error("[orders] listOrders", err);
+    res.status(500).json({ message: "Failed to load orders" });
+  }
+};
+
 /** GET /api/orders/:orderNumber — order detail for confirmation (owner only). */
 export const getOrder = async (req: Request, res: Response) => {
   try {
@@ -248,5 +317,63 @@ export const getOrder = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("[orders] getOrder", err);
     res.status(500).json({ message: "Failed to load order" });
+  }
+};
+
+/**
+ * PATCH /api/orders/:orderNumber/cancel — customer self-service cancellation.
+ * Only allowed while the order is still `PENDING` (i.e. before an admin has confirmed it).
+ * Restores the stock reserved at order placement.
+ */
+export const cancelOrder = async (req: Request, res: Response) => {
+  try {
+    const orderNumber = paramOrderNumber(req.params.orderNumber);
+    if (!orderNumber) {
+      res.status(400).json({ message: "Order number is required" });
+      return;
+    }
+
+    const userId = req.user!.userId;
+
+    const existing = await prisma.order.findUnique({
+      where: { orderNumber },
+      include: { items: { select: { productId: true, quantity: true } } },
+    });
+
+    if (!existing || existing.userId !== userId) {
+      res.status(404).json({ message: "Order not found" });
+      return;
+    }
+
+    if (!CANCELLABLE_STATUSES.includes(existing.status)) {
+      res.status(400).json({
+        message: "This order can no longer be cancelled — it has already been confirmed",
+      });
+      return;
+    }
+
+    const order = await prisma.$transaction(async (tx) => {
+      for (const item of existing.items) {
+        await tx.product.updateMany({
+          where: { id: item.productId, status: ProductStatus.OUT_OF_STOCK },
+          data: { status: ProductStatus.ACTIVE },
+        });
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity } },
+        });
+      }
+
+      return tx.order.update({
+        where: { orderNumber },
+        data: { status: OrderStatus.CANCELLED },
+        include: orderInclude,
+      });
+    });
+
+    res.json(formatOrder(order));
+  } catch (err) {
+    console.error("[orders] cancelOrder", err);
+    res.status(500).json({ message: "Failed to cancel order" });
   }
 };

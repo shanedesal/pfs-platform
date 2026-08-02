@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-02 — Customer order management (history, details, self-cancel)
+
+- **Doc:** `docs/customer-order-management.md` (also updated `docs/admin-orders.md` cross-reference)
+- **What changed:** Customers can now view their own order history at `/account/orders` (status filter, pagination, status badges) and full order details at `/account/orders/[orderNumber]`, and can self-cancel an order while it's still `PENDING` (before an admin confirms it) via a "Cancel order" action with a confirmation dialog. Cancelling restores the reserved stock for each line item and un-marks any product that had been auto-flipped to `OUT_OF_STOCK`. New owner-scoped endpoints: `GET /api/orders` (list) and `PATCH /api/orders/:orderNumber/cancel`. Moved the shared `OrderStatusBadge` component out of `components/admin/` into `web/src/components/order-status-badge.tsx` so both admin and customer order views use it. Added a "My Orders" link on the account page.
+- **Files:** `server/src/controllers/orders.controller.ts`, `server/src/routes/orders.ts`, `web/src/lib/orders.ts`, `web/src/components/order-status-badge.tsx` (moved from `web/src/components/admin/order-status-badge.tsx`), `web/src/app/admin/orders/page.tsx`, `web/src/app/admin/orders/[orderNumber]/page.tsx`, `web/src/app/account/orders/page.tsx`, `web/src/app/account/orders/[orderNumber]/page.tsx`, `web/src/app/account/page.tsx`, `docs/customer-order-management.md`
+
 ## 2026-08-02 — Admin order management (table + details, status updates)
 
 - **Doc:** `docs/admin-orders.md` (also updated `docs/checkout-orders.md`, `docs/admin-dashboard.md`)

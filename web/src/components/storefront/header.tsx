@@ -109,6 +109,12 @@ export default function Header() {
           >
             Products
           </Link>
+          <Link
+            href="/account/orders"
+            className="hidden text-sm text-ink transition hover:text-brand md:inline dark:text-paper"
+          >
+            Orders
+          </Link>
         </div>
 
         <Suspense fallback={<SearchFallback />}>
