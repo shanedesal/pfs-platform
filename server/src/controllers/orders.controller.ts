@@ -47,6 +47,18 @@ function parsePaymentMethod(value: unknown): PaymentMethod | null {
   return normalized as PaymentMethod;
 }
 
+/** Renders a saved Address row into the flat text snapshot stored on the order. */
+function formatDeliveryAddress(address: {
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  province: string;
+  postalCode: string | null;
+}): string {
+  const base = `${address.addressLine1}, ${address.addressLine2}, ${address.city}, ${address.province}`;
+  return address.postalCode ? `${base} ${address.postalCode}` : base;
+}
+
 function formatOrder(order: OrderWithItems) {
   const items = order.items.map((item) => ({
     productId: item.productId,
@@ -84,14 +96,14 @@ function paramOrderNumber(raw: string | string[] | undefined): string {
 /** POST /api/orders — place order from the customer's cart. */
 export const placeOrder = async (req: Request, res: Response) => {
   try {
-    const deliveryAddress = trimString(req.body?.deliveryAddress, 500);
+    const addressId = trimString(req.body?.addressId, 100);
     const paymentMethod = parsePaymentMethod(req.body?.paymentMethod);
     const orderNotesRaw =
       typeof req.body?.orderNotes === "string" ? req.body.orderNotes.trim() : "";
     const orderNotes = orderNotesRaw.length > 0 ? orderNotesRaw.slice(0, 1000) : null;
 
-    if (!deliveryAddress) {
-      res.status(400).json({ message: "Delivery address is required" });
+    if (!addressId) {
+      res.status(400).json({ message: "Select a delivery address" });
       return;
     }
     if (!paymentMethod) {
@@ -101,15 +113,26 @@ export const placeOrder = async (req: Request, res: Response) => {
 
     const userId = req.user!.userId;
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { name: true, email: true, phoneNumber: true },
-    });
+    const [user, address] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true, phoneNumber: true },
+      }),
+      prisma.address.findUnique({ where: { id: addressId } }),
+    ]);
 
     if (!user) {
       res.status(401).json({ message: "Not authenticated" });
       return;
     }
+
+    // Not found or belongs to someone else — same 400 either way (don't leak existence).
+    if (!address || address.userId !== userId) {
+      res.status(400).json({ message: "Select a valid delivery address" });
+      return;
+    }
+
+    const deliveryAddress = formatDeliveryAddress(address);
 
     const customerName = user.name.trim();
     const email = user.email.trim();

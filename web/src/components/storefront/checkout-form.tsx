@@ -11,6 +11,7 @@ import {
   type PaymentMethod,
   type PlaceOrderPayload,
 } from "@/lib/orders";
+import DeliveryAddressPicker from "./delivery-address-picker";
 
 type CheckoutFormProps = {
   customerName: string;
@@ -19,7 +20,6 @@ type CheckoutFormProps = {
 };
 
 type FormState = {
-  deliveryAddress: string;
   paymentMethod: PaymentMethod | "";
   orderNotes: string;
 };
@@ -31,8 +31,8 @@ export default function CheckoutForm({
 }: CheckoutFormProps) {
   const router = useRouter();
   const { cart, refetch } = useCart();
+  const [addressId, setAddressId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({
-    deliveryAddress: "",
     paymentMethod: "",
     orderNotes: "",
   });
@@ -51,8 +51,8 @@ export default function CheckoutForm({
     e.preventDefault();
     if (!canSubmit) return;
 
-    if (!form.deliveryAddress.trim()) {
-      setError("Delivery address is required");
+    if (!addressId) {
+      setError("Select a delivery address");
       return;
     }
     if (!form.paymentMethod) {
@@ -61,7 +61,7 @@ export default function CheckoutForm({
     }
 
     const payload: PlaceOrderPayload = {
-      deliveryAddress: form.deliveryAddress.trim(),
+      addressId,
       paymentMethod: form.paymentMethod,
       orderNotes: form.orderNotes.trim() || undefined,
     };
@@ -126,19 +126,10 @@ export default function CheckoutForm({
       </div>
 
       <div>
-        <label htmlFor="deliveryAddress" className={labelClass}>
-          Delivery address
-        </label>
-        <textarea
-          id="deliveryAddress"
-          required
-          rows={3}
-          maxLength={500}
-          value={form.deliveryAddress}
-          onChange={(e) => updateField("deliveryAddress", e.target.value)}
-          className={`${inputClass} resize-y`}
-          autoComplete="street-address"
-        />
+        <label className={labelClass}>Delivery address</label>
+        <div className="mt-2">
+          <DeliveryAddressPicker selectedId={addressId} onSelect={setAddressId} />
+        </div>
       </div>
 
       <fieldset>

@@ -31,7 +31,7 @@ export type Order = {
 };
 
 export type PlaceOrderPayload = {
-  deliveryAddress: string;
+  addressId: string;
   paymentMethod: PaymentMethod;
   orderNotes?: string;
 };

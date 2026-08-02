@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-02 — Checkout now selects from saved address book
+
+- **Doc:** `docs/checkout-orders.md`
+- **What changed:** The checkout delivery address is no longer a free-text textarea — customers pick from their saved address book (default pre-selected) via a new `DeliveryAddressPicker`. If they have no saved addresses yet, the picker shows an empty state with an inline "Add delivery address" form (reusing the account page's modal + `AddressForm`), so checkout never dead-ends on a missing profile address. `POST /api/orders` now takes `addressId` instead of `deliveryAddress`; the server resolves and formats the address server-side (rejecting `addressId`s that don't belong to the caller) into the existing `Order.deliveryAddress` text snapshot — no schema change needed.
+- **Files:** `server/src/controllers/orders.controller.ts`, `web/src/lib/orders.ts`, `web/src/components/storefront/checkout-form.tsx`, `web/src/components/storefront/delivery-address-picker.tsx`, `docs/checkout-orders.md`
+
 ## 2026-08-02 — Address book: barangay now required
 
 - **Doc:** `docs/user-profile.md`
