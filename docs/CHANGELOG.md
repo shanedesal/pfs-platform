@@ -4,6 +4,66 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-02 — Address book: barangay now required
+
+- **Doc:** `docs/user-profile.md`
+- **What changed:** The barangay field (`addressLine2`) on saved addresses is now required instead of optional — enforced at the database level (`NOT NULL`, backfilling any existing blanks), in the address API validation, and in the add/edit form (marked required, no longer labeled optional).
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260802140000_address_barangay_required/`, `server/src/controllers/addresses.controller.ts`, `web/src/lib/addresses.ts`, `web/src/components/storefront/address-form.tsx`, `web/src/components/storefront/address-book.tsx`, `docs/user-profile.md`
+
+## 2026-08-02 — Address book: drop per-address recipient/contact fields
+
+- **Doc:** `docs/user-profile.md`
+- **What changed:** Saved addresses are now address-only — removed the per-address `recipientName` and `phoneNumber` fields (added moments earlier) from the `Address` model, API, and the add/edit form. An address is just label + street/barangay + city/province/postal code; recipient name and contact number continue to come from the account profile.
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260802130000_remove_address_recipient_contact/`, `server/src/controllers/addresses.controller.ts`, `web/src/lib/addresses.ts`, `web/src/components/storefront/address-form.tsx`, `web/src/components/storefront/address-book.tsx`, `docs/user-profile.md`
+
+## 2026-08-02 — Delivery address book (multiple saved addresses + default)
+
+- **Doc:** `docs/user-profile.md`
+- **What changed:** Customers can now save multiple delivery addresses on `/account` (Shopee-style address book): label, recipient name, PH-format contact number, street/barangay, city, province, postal code. Exactly one address is the default at all times — the first saved address becomes default automatically, "Set as default" promotes any other address (demoting the previous one), and deleting the default auto-promotes the next-oldest remaining address. Capped at 10 addresses/customer. Add/edit via a modal form; delete via a confirmation dialog. New `Address` model + CRUD/set-default API. Not yet wired into checkout (`CheckoutForm` still takes a free-text delivery address).
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260802120000_add_addresses/`, `server/src/utils/phone.ts` (new shared helper, also used by `auth.controller.ts`), `server/src/controllers/addresses.controller.ts`, `server/src/controllers/auth.controller.ts`, `server/src/routes/addresses.ts`, `server/src/middleware/rateLimiter.ts`, `server/src/index.ts`, `web/src/lib/addresses.ts`, `web/src/components/storefront/address-book.tsx`, `web/src/components/storefront/address-form.tsx`, `web/src/components/storefront/modal.tsx`, `web/src/components/storefront/confirm-dialog.tsx`, `web/src/app/account/page.tsx`, `docs/user-profile.md`
+
+## 2026-08-02 — Contact number restricted to Philippine mobile format
+
+- **Doc:** `docs/user-profile.md`
+- **What changed:** The account page's phone number field now requires the Philippine mobile format — exactly 11 digits starting with `09`, normalized/stored as `0912 234 2345`. The input auto-formats as you type (digits only, grouped, capped at 11 digits); the server independently strips non-digits and re-validates the same `09XXXXXXXXX` pattern before saving, so any prior looser format is rejected on next edit.
+- **Files:** `server/src/controllers/auth.controller.ts`, `web/src/components/storefront/phone-number-field.tsx`, `docs/user-profile.md`
+
+## 2026-08-02 — Account page redesign + editable contact number
+
+- **Doc:** `docs/user-profile.md` (also updated `docs/checkout-orders.md`)
+- **What changed:** Redesigned `/account` (identity card with initials avatar + role badge, sectioned "Contact details" / "Member since" cards, shared `Header`/`Footer` chrome instead of a chromeless page). Customers can now edit their contact number inline via a new `PATCH /api/auth/me` endpoint (validated: 7+ digits, digits/`+`/`-`/spaces/parens only, 20 char max, rate-limited). `/api/auth/me`, login, and register responses now include `createdAt`. Updated checkout copy that referenced "profile editing coming soon" to point at the account page.
+- **Files:** `server/src/controllers/auth.controller.ts`, `server/src/routes/auth.ts`, `server/src/middleware/rateLimiter.ts`, `web/src/lib/profile.ts`, `web/src/lib/auth-context.tsx`, `web/src/components/storefront/phone-number-field.tsx`, `web/src/app/account/page.tsx`, `web/src/components/storefront/checkout-form.tsx`, `web/src/components/storefront/checkout-profile-required.tsx`, `docs/user-profile.md`, `docs/checkout-orders.md`
+
+## 2026-08-02 — Fix login after profile schema change (Docker)
+
+- **Doc:** `docs/docker-local-dev.md`
+- **What changed:** Login appeared broken because `/api/auth/me` failed when the `phoneNumber` migration/client were stale in a running server container. Applied migration + `prisma generate` guidance updated. Login/register now apply the auth response immediately so a transient `/me` failure does not block sign-in.
+- **Files:** `web/src/lib/auth-context.tsx`, `web/src/app/login/page.tsx`, `web/src/app/register/page.tsx`, `docs/docker-local-dev.md`
+
+## 2026-08-02 — Checkout profile gate (contact number required)
+
+- **Doc:** `docs/checkout-orders.md`
+- **What changed:** Customers without a profile contact number cannot proceed to checkout: cart disables the checkout button with a compact alert, checkout page shows a full contact-required prompt instead of the form, and the account page surfaces the same notice. Shared `hasCheckoutContactNumber()` helper; server rejection unchanged.
+- **Files:** `web/src/lib/checkout-profile.ts`, `web/src/components/storefront/checkout-profile-required.tsx`, `web/src/app/checkout/page.tsx`, `web/src/components/storefront/cart-view.tsx`, `web/src/app/account/page.tsx`, `docs/checkout-orders.md`
+
+## 2026-08-02 — Checkout: profile-locked contact details + user phone number
+
+- **Doc:** `docs/checkout-orders.md`
+- **What changed:** Checkout name, email, and contact number are read-only and sourced from the signed-in user's profile. Added optional `User.phoneNumber` column; orders API reads profile fields server-side and rejects checkout when phone is missing. Account page shows phone number.
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260802110000_add_user_phone_number/`, `server/src/controllers/auth.controller.ts`, `server/src/controllers/orders.controller.ts`, `web/src/lib/auth-context.tsx`, `web/src/lib/orders.ts`, `web/src/components/storefront/checkout-form.tsx`, `web/src/app/checkout/page.tsx`, `web/src/app/account/page.tsx`, `docs/checkout-orders.md`
+
+## 2026-08-02 — Checkout & order placement
+
+- **Doc:** `docs/checkout-orders.md`, `docs/shopping-cart.md`
+- **What changed:** Customers can complete checkout with name, email, contact, delivery address, payment method (Cash on Delivery, E-Wallet, Bank Transfer), and optional order notes. Placing an order creates an `Order` + `OrderItem` rows, decrements stock, clears the cart, and redirects to a confirmation page showing the generated order number and order summary. No real payment gateway.
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260802100000_add_orders/`, `server/src/controllers/orders.controller.ts`, `server/src/routes/orders.ts`, `server/src/index.ts`, `web/src/lib/orders.ts`, `web/src/components/storefront/checkout-form.tsx`, `web/src/app/checkout/page.tsx`, `web/src/app/checkout/confirmation/[orderNumber]/page.tsx`, `docs/checkout-orders.md`, `docs/shopping-cart.md`
+
+## 2026-08-02 — Product detail: Checkout button
+
+- **Doc:** `docs/product-listing.md`, `docs/shopping-cart.md`
+- **What changed:** Product detail page adds a **Checkout** button (outline style) below Add to Cart. Uses the selected quantity, adds to cart via existing API, then navigates to `/checkout`. Guests redirect to login; admins see neither cart action. No new checkout/order endpoint yet.
+- **Files:** `web/src/components/storefront/checkout-button.tsx`, `web/src/components/storefront/product-detail.tsx`, `docs/product-listing.md`, `docs/shopping-cart.md`
+
 ## 2026-08-02 — Product detail: quantity selector before add to cart
 
 - **Doc:** `docs/product-listing.md`, `docs/shopping-cart.md`

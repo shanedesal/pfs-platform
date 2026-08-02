@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "../config/db";
 import { verifyRefreshToken } from "../utils/jwt";
 import { hashToken, issueTokenPair, revokeRefreshToken } from "../utils/tokens";
+import { normalizePhoneNumber } from "../utils/phone";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -74,7 +75,14 @@ export const register = async (req: Request, res: Response) => {
 
     setAuthCookies(res, accessToken, refreshToken)
       .status(201)
-      .json({ id: user.id, email: user.email, name: user.name, role: user.role });
+      .json({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+        createdAt: user.createdAt,
+      });
   } catch (error) {
     console.error("Registration failed:", error);
     res.status(500).json({ message: "Registration failed" });
@@ -109,7 +117,9 @@ export const login = async (req: Request, res: Response) => {
       id: user.id,
       email: user.email,
       name: user.name,
+      phoneNumber: user.phoneNumber,
       role: user.role,
+      createdAt: user.createdAt,
     });
   } catch (error) {
     console.error("Login failed:", error);
@@ -205,7 +215,14 @@ export const me = async (req: Request, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.userId },
-      select: { id: true, email: true, name: true, role: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phoneNumber: true,
+        role: true,
+        createdAt: true,
+      },
     });
 
     if (!user) {
@@ -216,5 +233,37 @@ export const me = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Failed to fetch user:", error);
     res.status(500).json({ message: "Failed to fetch user" });
+  }
+};
+
+/** PATCH /api/auth/me — update the signed-in user's own profile (contact number only, for now). */
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const phoneNumber = normalizePhoneNumber(req.body?.phoneNumber);
+
+    if (!phoneNumber) {
+      return res.status(400).json({
+        message:
+          "Enter a valid Philippine mobile number (11 digits starting with 09), e.g. 0912 234 2345",
+      });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { phoneNumber },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phoneNumber: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    res.json(user);
+  } catch (error) {
+    console.error("Failed to update profile:", error);
+    res.status(500).json({ message: "Failed to update profile" });
   }
 };

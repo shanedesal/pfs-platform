@@ -16,16 +16,49 @@ enum ProductStatus {
   OUT_OF_STOCK
 }
 
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  E_WALLET
+  BANK_TRANSFER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
   password      String
   name          String
+  phoneNumber   String?
   role          Role           @default(CUSTOMER)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   refreshTokens RefreshToken[]
   cart          Cart?
+  orders        Order[]
+  addresses     Address[]
+}
+
+/// Saved delivery addresses (Shopee-style address book). Exactly one may be `isDefault` per user.
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label        String?
+  addressLine1 String
+  addressLine2 String
+  city         String
+  province     String
+  postalCode   String?
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model RefreshToken {
@@ -62,6 +95,7 @@ model Product {
   category    Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   images      ProductImage[]
   cartItems   CartItem[]
+  orderItems  OrderItem[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
@@ -103,4 +137,40 @@ model ProductImage {
   updatedAt DateTime @updatedAt
 
   @@index([productId])
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  orderNumber     String        @unique
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerName    String
+  email           String
+  contactNumber   String
+  deliveryAddress String
+  paymentMethod   PaymentMethod
+  orderNotes      String?
+  status          OrderStatus   @default(PENDING)
+  subtotal        Decimal       @db.Decimal(10, 2)
+  total           Decimal       @db.Decimal(10, 2)
+  items           OrderItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id          String  @id @default(uuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productName String
+  unitPrice   Decimal @db.Decimal(10, 2)
+  quantity    Int
+  lineTotal   Decimal @db.Decimal(10, 2)
+
+  @@index([orderId])
 }

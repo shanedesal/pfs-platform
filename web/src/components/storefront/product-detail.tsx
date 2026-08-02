@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import type { Product } from "@/lib/product";
 import { getDescriptionPreview, isProductAvailable } from "@/lib/product";
 import AddToCartButton from "./add-to-cart-button";
+import CheckoutButton from "./checkout-button";
 
 type ProductDetailProps = {
   productId: string;
@@ -235,6 +236,13 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               quantity={quantity}
               disabled={!available}
               showIcon
+              className="w-full px-6 py-3 text-sm"
+            />
+
+            <CheckoutButton
+              productId={product.id}
+              quantity={quantity}
+              disabled={!available}
               className="w-full px-6 py-3 text-sm"
             />
           </div>

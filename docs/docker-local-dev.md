@@ -68,20 +68,20 @@ Warm navigations should land around sub-second; multi-second timings usually mea
 
 ### Stale Prisma client after schema changes
 
-If a new model was added (e.g. `Cart`) while `pfs_server` was already running, API handlers may return generic `500` errors such as `Failed to add item to cart`. Server logs show `Cannot read properties of undefined (reading 'findUnique')` on `prisma.cart` — the running process still has an old generated client.
+If a new model or column was added (e.g. `Cart`, `User.phoneNumber`) while `pfs_server` was already running, API handlers may return generic `500` errors. Examples:
 
-Restart the server so startup re-runs `prisma generate`:
+- Cart: `Failed to add item to cart` — logs show `Cannot read properties of undefined (reading 'findUnique')` on `prisma.cart`
+- Auth: login returns `200` but the session never sticks — `/api/auth/me` returns `500` / `Failed to fetch user` because the generated client does not yet know about a new field (e.g. `phoneNumber`)
 
-```bash
-docker compose restart server
-```
-
-Or regenerate without a full restart:
+Migrations only run on container **start**, not when new migration files appear on the mounted volume. After pulling schema changes:
 
 ```bash
+docker compose exec server npx prisma migrate deploy
 docker compose exec server npx prisma generate
 docker compose restart server
 ```
+
+A restart alone also works if you prefer — startup runs `generate` → `migrate deploy` → seed → dev.
 
 Optional later: upgrade Next.js past 16.2.x for Turbopack memory-eviction improvements (needs explicit package approval).
 

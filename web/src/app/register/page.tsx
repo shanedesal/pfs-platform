@@ -8,7 +8,7 @@ import { apiFetch } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { refetch } = useAuth();
+  const { applyUser, refetch } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +34,17 @@ export default function RegisterPage() {
         return;
       }
 
-      await refetch();
+      if (data?.id) {
+        applyUser({
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          phoneNumber: data.phoneNumber ?? null,
+          role: data.role,
+        });
+      }
+
+      void refetch();
       router.push(data.role === "ADMIN" ? "/admin" : "/");
       router.refresh();
     } catch {

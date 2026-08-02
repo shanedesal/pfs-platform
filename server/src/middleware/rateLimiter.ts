@@ -32,3 +32,19 @@ export const logoutLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many logout attempts. Try again later." },
 });
+
+export const updateProfileLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many profile updates. Try again later." },
+});
+
+export const addressWriteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many address changes. Try again later." },
+});

@@ -15,7 +15,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = safeRedirect(searchParams.get("redirect"));
-  const { refetch } = useAuth();
+  const { applyUser, refetch } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -40,7 +40,17 @@ export default function LoginPage() {
         return;
       }
 
-      await refetch();
+      if (data?.id) {
+        applyUser({
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          phoneNumber: data.phoneNumber ?? null,
+          role: data.role,
+        });
+      }
+
+      void refetch();
       router.push(data.role === "ADMIN" ? "/admin" : redirect);
       router.refresh();
     } catch {

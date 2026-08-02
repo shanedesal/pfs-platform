@@ -13,7 +13,7 @@ Signed-in **customers** can add products to a server-backed shopping cart, revie
 | User | Add to cart | View cart | Checkout |
 |------|-------------|-----------|----------|
 | Guest | Redirect to login | Redirect to login | Redirect to login |
-| Customer | Yes | Yes (`/cart`) | Yes (`/checkout` stub) |
+| Customer | Yes | Yes (`/cart`) | Yes (`/checkout`) |
 | Admin | Hidden | Hidden (redirect to `/admin`) | N/A |
 
 ### Cart operations
@@ -30,7 +30,7 @@ Cart rows live in `Cart` / `CartItem` tables keyed by `userId`. Refreshing the b
 
 ### Checkout (current)
 
-`/checkout` shows an order summary and a disabled **Place order** button. Payment and order creation are not implemented yet.
+`/checkout` collects delivery and payment details, places the order via `POST /api/orders`, and redirects to `/checkout/confirmation/[orderNumber]`. See `docs/checkout-orders.md` for full checkout behavior.
 
 ## Implementation
 
@@ -70,8 +70,10 @@ Each `item` includes `product` (id, name, price, stock, imageUrl, status), `line
 
 - **`CartProvider`** — loads cart when a customer is signed in; exposes `addItem`, `updateQuantity`, `removeItem`.
 - **`AddToCartButton`** — guest → login with `?redirect=`; admin → hidden; customer → calls cart API.
+- **`CheckoutButton`** — product detail only for now; same auth rules as add to cart. Adds the selected quantity via the cart API, then navigates to `/checkout`.
 - **`/cart`** — full cart UI with quantity controls, remove, subtotal/total, link to checkout.
-- **`/checkout`** — summary stub; place-order disabled until payments/orders exist.
+- **`/checkout`** — checkout form + order summary; places order via orders API.
+- **`/checkout/confirmation/[orderNumber]`** — order confirmation with order number and summary.
 - Header cart icon + badge (customers only).
 
 Key files:
@@ -79,7 +81,7 @@ Key files:
 - `server/src/controllers/cart.controller.ts`
 - `server/src/routes/cart.ts`
 - `web/src/lib/cart.ts`, `web/src/lib/cart-context.tsx`
-- `web/src/components/storefront/add-to-cart-button.tsx`, `cart-view.tsx`
+- `web/src/components/storefront/add-to-cart-button.tsx`, `checkout-button.tsx`, `cart-view.tsx`
 - `web/src/app/cart/page.tsx`, `web/src/app/checkout/page.tsx`
 
 ## Changes

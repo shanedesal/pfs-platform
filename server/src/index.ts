@@ -8,6 +8,8 @@ import homepageRouter from "./routes/homepage";
 import authRouter from "./routes/auth";
 import adminRouter from "./routes/admin";
 import cartRouter from "./routes/cart";
+import ordersRouter from "./routes/orders";
+import addressesRouter from "./routes/addresses";
 import { requestLogger } from "./middleware/requestLogger";
 import { validateEnv } from "./utils/env";
 
@@ -41,6 +43,8 @@ app.use("/api/homepage", homepageRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/cart", cartRouter);
+app.use("/api/orders", ordersRouter);
+app.use("/api/addresses", addressesRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -13,7 +13,9 @@ interface User {
   id: string;
   email: string;
   name: string;
+  phoneNumber: string | null;
   role: "ADMIN" | "CUSTOMER";
+  createdAt?: string | null;
 }
 
 interface AuthContextType {
@@ -21,6 +23,8 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   refetch: () => Promise<void>;
+  /** Apply user from login/register response without waiting for /me. */
+  applyUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -28,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   logout: async () => {},
   refetch: async () => {},
+  applyUser: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -60,8 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = "/";
   };
 
+  const applyUser = (data: User) => {
+    setUser(data);
+    setLoading(false);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, logout, refetch: fetchUser }}>
+    <AuthContext.Provider
+      value={{ user, loading, logout, refetch: fetchUser, applyUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

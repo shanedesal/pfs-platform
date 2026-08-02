@@ -5,9 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Header from "@/components/storefront/header";
 import Footer from "@/components/storefront/footer";
+import CheckoutForm from "@/components/storefront/checkout-form";
+import CheckoutProfileRequired from "@/components/storefront/checkout-profile-required";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { formatMoney } from "@/lib/cart";
+import { hasCheckoutContactNumber } from "@/lib/checkout-profile";
 
 export default function CheckoutPage() {
   const { user, loading: authLoading } = useAuth();
@@ -26,14 +29,13 @@ export default function CheckoutPage() {
   }, [authLoading, user, router]);
 
   const loading = authLoading || cartLoading;
-  const hasUnavailable = cart.items.some((item) => !item.available);
-  const canProceed = cart.items.length > 0 && !hasUnavailable;
+  const profileReady = hasCheckoutContactNumber(user);
 
   if (loading || !user || user.role !== "CUSTOMER") {
     return (
       <>
         <Header />
-        <main className="mx-auto max-w-lg px-6 py-16">
+        <main className="mx-auto max-w-5xl px-6 py-16">
           <div className="h-8 w-40 animate-pulse rounded bg-slate/10" />
         </main>
         <Footer />
@@ -44,7 +46,7 @@ export default function CheckoutPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-lg px-6 py-16">
+      <main className="mx-auto max-w-5xl px-6 py-16">
         <Link href="/cart" className="text-sm text-slate transition hover:text-brand">
           ← Back to cart
         </Link>
@@ -64,8 +66,27 @@ export default function CheckoutPage() {
             </Link>
           </div>
         ) : (
-          <div className="mt-8 space-y-6">
-            <div className="rounded-2xl border border-slate/15 p-6">
+          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
+            <section className="rounded-2xl border border-slate/15 p-6">
+              {!profileReady ? (
+                <CheckoutProfileRequired />
+              ) : (
+                <>
+                  <h2 className="font-display text-lg font-semibold text-ink dark:text-paper">
+                    Delivery &amp; payment
+                  </h2>
+                  <div className="mt-6">
+                    <CheckoutForm
+                      customerName={user.name}
+                      email={user.email}
+                      phoneNumber={user.phoneNumber}
+                    />
+                  </div>
+                </>
+              )}
+            </section>
+
+            <aside className="h-fit rounded-2xl border border-slate/15 p-6">
               <h2 className="font-display text-lg font-semibold text-ink dark:text-paper">
                 Order summary
               </h2>
@@ -95,30 +116,7 @@ export default function CheckoutPage() {
                   <dd className="font-mono text-brand">{formatMoney(cart.total)}</dd>
                 </div>
               </dl>
-            </div>
-
-            {hasUnavailable ? (
-              <p className="text-sm text-amber">
-                Some items in your cart are no longer available.{" "}
-                <Link href="/cart" className="font-medium hover:underline">
-                  Update your cart
-                </Link>{" "}
-                to continue.
-              </p>
-            ) : (
-              <p className="text-sm text-slate">
-                Payment and order placement are coming soon. Your cart is saved
-                to your account.
-              </p>
-            )}
-
-            <button
-              type="button"
-              disabled={!canProceed}
-              className="w-full rounded-full bg-brand px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Place order
-            </button>
+            </aside>
           </div>
         )}
       </main>

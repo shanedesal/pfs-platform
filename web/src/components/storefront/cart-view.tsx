@@ -3,14 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { formatMoney } from "@/lib/cart";
+import { hasCheckoutContactNumber } from "@/lib/checkout-profile";
+import CheckoutProfileRequired from "@/components/storefront/checkout-profile-required";
 
 type CartViewProps = {
   showCheckoutAction?: boolean;
 };
 
 export default function CartView({ showCheckoutAction = true }: CartViewProps) {
+  const { user } = useAuth();
   const { cart, loading, actionError, clearActionError, updateQuantity, removeItem } =
     useCart();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -34,6 +38,7 @@ export default function CartView({ showCheckoutAction = true }: CartViewProps) {
   }
 
   const hasUnavailable = cart.items.some((item) => !item.available);
+  const profileReady = hasCheckoutContactNumber(user);
 
   const handleQuantity = async (productId: string, next: number) => {
     if (next < 1) return;
@@ -171,20 +176,34 @@ export default function CartView({ showCheckoutAction = true }: CartViewProps) {
           <p className="mt-4 text-sm text-amber">
             Remove unavailable items before checkout.
           </p>
+        ) : !profileReady ? (
+          <div className="mt-4">
+            <CheckoutProfileRequired variant="compact" />
+          </div>
         ) : null}
 
         {showCheckoutAction ? (
-          <Link
-            href="/checkout"
-            aria-disabled={hasUnavailable}
-            className={`mt-6 flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-medium transition ${
-              hasUnavailable
-                ? "pointer-events-none bg-brand/40 text-white"
-                : "bg-brand text-white hover:bg-brand-dark"
-            }`}
-          >
-            Proceed to checkout
-          </Link>
+          profileReady ? (
+            <Link
+              href="/checkout"
+              aria-disabled={hasUnavailable}
+              className={`mt-6 flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-medium transition ${
+                hasUnavailable
+                  ? "pointer-events-none bg-brand/40 text-white"
+                  : "bg-brand text-white hover:bg-brand-dark"
+              }`}
+            >
+              Proceed to checkout
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="mt-6 flex w-full cursor-not-allowed items-center justify-center rounded-full bg-brand/40 px-6 py-3 text-sm font-medium text-white"
+            >
+              Proceed to checkout
+            </button>
+          )
         ) : null}
       </aside>
     </div>
