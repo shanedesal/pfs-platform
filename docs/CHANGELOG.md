@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-03 — Admin dashboard: wire order and sales stats
+
+- **Doc:** `docs/admin-dashboard.md`
+- **What changed:** Extended `GET /api/admin/dashboard-stats` with total/pending/completed order counts and completed-order sales total; removed "Coming soon" placeholders from all six dashboard cards.
+- **Files:** `server/src/controllers/admin.controller.ts`, `web/src/lib/admin/dashboard.ts`, `web/src/app/admin/page.tsx`, `docs/admin-dashboard.md`
+
 ## 2026-08-03 — Deployment doc: seed from local machine (no Render Shell)
 
 - **Doc:** `docs/deployment.md`

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { authFetch } from "@/lib/api";
 import type { DashboardStats } from "@/lib/admin/dashboard";
+import { formatMoney } from "@/lib/orders";
 import AdminStatCard from "@/components/admin/stat-card";
 
 export default function AdminDashboard() {
@@ -67,21 +68,21 @@ export default function AdminDashboard() {
         />
         <AdminStatCard
           label="Total Orders"
-          value={null}
+          value={stats?.totalOrders ?? null}
           icon={ShoppingCart}
-          hint="Coming soon"
+          loading={loading}
         />
         <AdminStatCard
           label="Pending Orders"
-          value={null}
+          value={stats?.pendingOrders ?? null}
           icon={Clock}
-          hint="Coming soon"
+          loading={loading}
         />
         <AdminStatCard
           label="Completed Orders"
-          value={null}
+          value={stats?.completedOrders ?? null}
           icon={CheckCircle2}
-          hint="Coming soon"
+          loading={loading}
         />
         <AdminStatCard
           label="Total Customers"
@@ -91,9 +92,9 @@ export default function AdminDashboard() {
         />
         <AdminStatCard
           label="Total Sales"
-          value={null}
+          value={stats != null ? formatMoney(stats.totalSales) : null}
           icon={Wallet}
-          hint="Coming soon"
+          loading={loading}
         />
       </div>
     </div>
