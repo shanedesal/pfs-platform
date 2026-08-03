@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-03 — Login page: Suspense for useSearchParams (Render build)
+
+- **Doc:** `docs/deployment.md`
+- **What changed:** Wrapped `/login` content in `<Suspense>` so Next.js production build succeeds when prerendering pages that read query params via `useSearchParams()`.
+- **Files:** `web/src/app/login/page.tsx`, `docs/deployment.md`
+
 ## 2026-08-03 — Render build: install devDependencies for Next/TSC
 
 - **Doc:** `docs/deployment.md`

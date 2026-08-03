@@ -198,6 +198,7 @@ Then set `CORS_ORIGIN` and `APP_URL` on the API to the web service URL.
 | Image upload fails | Supabase bucket / keys | Bucket `pfs-products` must exist and be public; verify service role key |
 | Homepage empty, API 502 | API cold start or crash | Check pfs-api logs; hit `/health` directly |
 | Web build: `Cannot find module '@tailwindcss/postcss'` | Render skips devDependencies when `NODE_ENV=production` | Use `npm ci --include=dev && npm run build` (already in `render.yaml`) |
+| Web build: `useSearchParams() should be wrapped in a suspense boundary` | Next.js static generation requires Suspense around `useSearchParams` | Wrap page content in `<Suspense>` (e.g. `/login`) |
 | Emails not sent | Brevo not configured | Set both `BREVO_API_KEY` and `BREVO_SENDER_EMAIL` |
 
 ---
