@@ -8,7 +8,7 @@ PFS authenticates users with httpOnly cookies: a short-lived access token and a 
 
 | Rule | Detail |
 |------|--------|
-| Access cookie | `accessToken`, ~15m, httpOnly; `sameSite=strict` in development; `sameSite=none` + `secure` in production (required for cross-origin Render/Vercel deploys) |
+| Access cookie | `accessToken`, ~15m, httpOnly; `sameSite=strict` in development; `sameSite=none` + `secure` in production on the API. **Production storefront:** browser calls same-origin `/api/*` (Next.js rewrite to Express), so cookies are stored on the web host — required for Safari/iOS |
 | Refresh cookie | `refreshToken`, ~7d; same cookie flags as access; JWT signed with `JWT_REFRESH_SECRET`; SHA-256 hash stored in `RefreshToken` |
 | Rotation | Successful `POST /api/auth/refresh` atomically claims (revokes) the presented token, then issues a new pair |
 | Concurrent refresh | Only one request can claim a given token (`updateMany` where `revokedAt` is null). Losers receive `401` without wiping other sessions if the token was revoked within a **30s grace** window |
@@ -37,6 +37,7 @@ PFS authenticates users with httpOnly cookies: a short-lived access token and a 
 - **Token helpers:** `server/src/utils/tokens.ts`, `server/src/utils/jwt.ts`
 - **Rate limits:** `server/src/middleware/rateLimiter.ts`, wired in `server/src/routes/auth.ts`
 - **Client:** `web/src/lib/api.ts` (`authFetch` + single-flight refresh), `web/src/lib/auth-context.tsx`
+- **API proxy:** `web/next.config.ts` rewrites `/api/:path*` → Express (`NEXT_PUBLIC_API_URL` at build time). Browser `apiFetch` uses relative URLs so cookies stay on the storefront origin.
 
 ### Refresh flow (happy path)
 
@@ -47,6 +48,7 @@ PFS authenticates users with httpOnly cookies: a short-lived access token and a 
 
 ## Changes
 
+- Same-origin `/api/*` proxy via Next.js rewrites so Safari/iOS keeps auth cookies (fixes login on mobile when web and API are on different Render hosts)
 - Atomic refresh token claim to prevent double-rotation races.
 - 30s grace before treating revoked-token replay as theft (avoids multi-tab / parallel refresh logging everyone out).
 - Frontend single-flight refresh for parallel `authFetch` callers.

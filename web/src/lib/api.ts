@@ -1,3 +1,16 @@
+/**
+ * Browser requests use same-origin `/api/*` (proxied by Next.js rewrites) so httpOnly
+ * auth cookies stay first-party — required for Safari/iOS, which blocks cross-site
+ * cookies between pfs-web and pfs-api on Render even with SameSite=None.
+ */
+function apiBase(): string {
+  if (typeof window !== "undefined") {
+    return "";
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+}
+
+/** @deprecated Prefer relative paths; browser calls are same-origin via Next.js rewrites. */
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const isDev = process.env.NODE_ENV === "development";
@@ -25,7 +38,7 @@ export async function apiFetch(
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${apiBase()}${path}`, {
     credentials: "include",
     ...options,
     headers,

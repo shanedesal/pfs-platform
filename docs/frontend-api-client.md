@@ -15,13 +15,14 @@ The web app talks to the backend through shared helpers in `web/src/lib/api.ts`.
 
 ## Implementation
 
-- `API_URL` — base URL from `NEXT_PUBLIC_API_URL`, default `http://localhost:5000`.
+- `API_URL` — at request time in the browser: `""` (same-origin `/api/*` via Next.js rewrites). Server-side fallback: `NEXT_PUBLIC_API_URL`, default `http://localhost:5000`.
 - `apiFetch` — sets `credentials: "include"`, defaults JSON Content-Type for string bodies, performs the request, and applies the dev-only logger.
 - `authFetch` — wraps `apiFetch` with refresh-on-401 (except for `/api/auth/refresh`).
 - Refresh uses the same `apiFetch` path so it is logged in development too.
 
 ## Changes
 
+- Browser `apiFetch` uses same-origin `/api/*` (Next.js rewrite proxy) so auth cookies work on Safari/iOS in production.
 - Added `apiFetch` with development-only request/response logging.
 - Default `Content-Type: application/json` for string bodies when the caller omits it.
 - Routed existing homepage and auth call sites through `apiFetch` / `authFetch`.

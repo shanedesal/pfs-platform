@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-03 — Fix mobile (Safari/iOS) login via same-origin API proxy
+
+- **Doc:** `docs/auth-sessions.md`, `docs/deployment.md`, `docs/frontend-api-client.md`
+- **What changed:** Next.js rewrites proxy `/api/*` to Express; browser `apiFetch` uses relative URLs so httpOnly auth cookies stay on the storefront origin. Fixes login on iOS where cross-site cookies between `pfs-web` and `pfs-api` are blocked.
+- **Files:** `web/next.config.ts`, `web/src/lib/api.ts`, docs above
+
 ## 2026-08-03 — Admin dashboard: wire order and sales stats
 
 - **Doc:** `docs/admin-dashboard.md`

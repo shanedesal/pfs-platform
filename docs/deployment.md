@@ -7,8 +7,8 @@ Deploy PFS to production using **Render** for the Express API and Next.js storef
 ```mermaid
 flowchart LR
   Browser --> Web["pfs-web.onrender.com\nNext.js"]
-  Browser --> API["pfs-api.onrender.com\nExpress"]
-  Web -->|"NEXT_PUBLIC_API_URL"| API
+  Browser -->|"same-origin /api/*"| Web
+  Web -->|"rewrite proxy"| API["pfs-api.onrender.com\nExpress"]
   API --> DB["Supabase PostgreSQL"]
   API --> Storage["Supabase Storage\npfs-products bucket"]
   API --> Brevo["Brevo\noptional emails"]
@@ -184,7 +184,7 @@ Change passwords before any public demo.
 ## Behavior / rules
 
 - **Cold starts:** Free Render services sleep after inactivity. The first request after sleep can take 30–60 seconds.
-- **Cookies:** Production uses `Secure` + `SameSite=None` so httpOnly JWT cookies work when the storefront and API are on different Render subdomains.
+- **Cookies:** Production uses `Secure` + `SameSite=None` on the API for direct/cross-origin access. The storefront proxies `/api/*` through Next.js so the browser only talks to the web origin — auth cookies are first-party on `pfs-web`, which fixes login on Safari/iOS (cross-site cookies between Render subdomains are blocked there).
 - **Migrations:** Each API deploy runs `prisma migrate deploy` before starting (`npm run start:production`).
 - **No payment gateway:** Checkout still records payment method labels only.
 - **Supabase pause:** Inactive free projects pause after 7 days; wake them from the Supabase dashboard.
@@ -218,7 +218,8 @@ Then set `CORS_ORIGIN` and `APP_URL` on the API to the web service URL.
 
 | Symptom | Likely cause | Fix |
 |---------|----------------|-----|
-| Login succeeds but next page is logged out | Cookie `SameSite` / CORS | Ensure `CORS_ORIGIN` exactly matches the web URL (no trailing slash); redeploy API after web URL is known |
+| Login succeeds but next page is logged out | Cross-site cookies (Safari/iOS) or CORS | Storefront must proxy `/api/*` via Next.js rewrites (see `web/next.config.ts`); redeploy **pfs-web** after pulling that change. Also ensure `CORS_ORIGIN` exactly matches the web URL if anything still calls the API cross-origin |
+| Login works on desktop but not iPhone/iPad | Safari blocks third-party cookies between `pfs-web` and `pfs-api` | Same fix: same-origin API proxy on the web service (already in `next.config.ts`); redeploy pfs-web |
 | `Missing required environment variables` | Incomplete API env | Fill all required vars in Render → pfs-api → Environment |
 | Migrations fail on deploy | Wrong `DATABASE_URL` | Use Supabase direct or session connection string; check password |
 | API `P1001: Can't reach database server at db.*.supabase.co` | Direct Supabase URL on Render (IPv6-only) | Switch `DATABASE_URL` to **Session pooler** URI (`*.pooler.supabase.com`, user `postgres.[ref]`) |
