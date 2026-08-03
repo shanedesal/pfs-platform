@@ -231,20 +231,22 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               </div>
             </div>
 
-            <AddToCartButton
-              productId={product.id}
-              quantity={quantity}
-              disabled={!available}
-              showIcon
-              className="w-full px-6 py-3 text-sm"
-            />
+            <div className="flex gap-3">
+              <AddToCartButton
+                productId={product.id}
+                quantity={quantity}
+                disabled={!available}
+                showIcon
+                className="flex-1 px-6 py-3 text-sm"
+              />
 
-            <CheckoutButton
-              productId={product.id}
-              quantity={quantity}
-              disabled={!available}
-              className="w-full px-6 py-3 text-sm"
-            />
+              <CheckoutButton
+                productId={product.id}
+                quantity={quantity}
+                disabled={!available}
+                className="flex-1 px-6 py-3 text-sm"
+              />
+            </div>
           </div>
         </div>
       </div>

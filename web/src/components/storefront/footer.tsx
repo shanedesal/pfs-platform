@@ -9,9 +9,9 @@ import {
 
 /** Dummy placeholder contact details — swap for real values when available. */
 const contactInfo = [
-  { icon: Mail, label: "hello@pfsmarket.com", href: "mailto:hello@pfsmarket.com" },
-  { icon: Phone, label: "+1 (555) 019-2837", href: "tel:+15550192837" },
-  { icon: MapPin, label: "120 Market Street, Springfield, USA" },
+  { icon: Mail, label: "info@pfsmarket.com", href: "mailto:info@pfsmarket.com" },
+  { icon: Phone, label: "+63 978 989 1901", href: "tel:+639789891901" },
+  { icon: MapPin, label: "Brgy. San Vicente, Liloan, Cebu, Philippines 6002" },
 ];
 
 /** Dummy placeholder social profiles — swap for real handles/URLs when available. */
