@@ -41,6 +41,7 @@ Cancelling:
 1. Sets the order's `status` to `CANCELLED`.
 2. Restores the stock reserved for each line item back onto the corresponding `Product` (increments `stock` by the ordered quantity).
 3. Un-marks any product that had been auto-flipped to `OUT_OF_STOCK` at order time, setting it back to `ACTIVE` (products an admin explicitly set to `INACTIVE` are left untouched).
+4. Sends a confirmation email to the customer's snapshotted `order.email` (via Brevo — see [`docs/order-emails.md`](./order-emails.md)).
 
 There is no separate confirmation/refund flow — no payment gateway is integrated (see `docs/checkout-orders.md`), so cancellation only reverses the stock reservation.
 

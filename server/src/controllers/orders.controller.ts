@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import { Request, Response } from "express";
 import { OrderStatus, PaymentMethod, Prisma, ProductStatus } from "@prisma/client";
 import prisma from "../config/db";
+import { notifyOrderCancelledByCustomer } from "../services/email";
 import { orderInclude, formatOrder, paramOrderNumber } from "../utils/order-formatting";
 
 const PAYMENT_METHODS = new Set<string>(Object.values(PaymentMethod));
@@ -370,6 +371,8 @@ export const cancelOrder = async (req: Request, res: Response) => {
         include: orderInclude,
       });
     });
+
+    notifyOrderCancelledByCustomer(order);
 
     res.json(formatOrder(order));
   } catch (err) {

@@ -4,6 +4,18 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-03 — Switch order emails from Resend to Brevo; add admin cancellation email
+
+- **Doc:** `docs/order-emails.md` (also updated `docs/customer-order-management.md`, `docs/admin-orders.md`)
+- **What changed:** Replaced Resend with Brevo for transactional order emails. Added an admin-cancellation email when an admin sets status to `CANCELLED` (explicitly states an administrator cancelled the order). Env vars are now `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optional `BREVO_SENDER_NAME`. Removed the `resend` package; added `@getbrevo/brevo`.
+- **Files:** `server/package.json`, `server/package-lock.json`, `server/src/services/email/`, `server/src/controllers/admin-orders.controller.ts`, `server/src/utils/env.ts`, `README.md`, `docs/order-emails.md`, `docs/admin-orders.md`
+
+## 2026-08-03 — Order transactional emails (Resend)
+
+- **Doc:** `docs/order-emails.md` (also updated `docs/customer-order-management.md`, `docs/admin-orders.md`)
+- **What changed:** Added Resend-powered transactional emails for order completion (when an admin sets status to `COMPLETED`) and customer self-cancellation (confirmation after a successful cancel). Emails use the snapshotted `order.email`, send asynchronously so API responses are not blocked, and are skipped when `RESEND_API_KEY` / `RESEND_FROM` are not configured.
+- **Files:** `server/package.json`, `server/package-lock.json`, `server/src/services/email/`, `server/src/controllers/orders.controller.ts`, `server/src/controllers/admin-orders.controller.ts`, `server/src/utils/env.ts`, `README.md`, `docs/order-emails.md`, `docs/customer-order-management.md`, `docs/admin-orders.md`
+
 ## 2026-08-02 — Admin customer management (profiles, order history, enable/disable)
 
 - **Doc:** `docs/customer-management.md` (also updated `docs/auth-sessions.md` cross-reference)

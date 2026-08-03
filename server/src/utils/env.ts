@@ -27,4 +27,12 @@ export function validateEnv(): void {
     console.error("JWT_SECRET and JWT_REFRESH_SECRET must be at least 32 characters");
     process.exit(1);
   }
+
+  const hasBrevoKey = Boolean(process.env.BREVO_API_KEY?.trim());
+  const hasBrevoSender = Boolean(process.env.BREVO_SENDER_EMAIL?.trim());
+  if (hasBrevoKey !== hasBrevoSender) {
+    console.warn(
+      "[env] Order emails require both BREVO_API_KEY and BREVO_SENDER_EMAIL. Transactional emails will be skipped until both are set."
+    );
+  }
 }

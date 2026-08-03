@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { OrderStatus, Prisma } from "@prisma/client";
 import prisma from "../config/db";
+import { notifyOrderCancelledByAdmin, notifyOrderCompleted } from "../services/email";
 import { orderInclude, formatOrder, paramOrderNumber } from "../utils/order-formatting";
 
 const SEARCH_MAX_Q = 100;
@@ -135,6 +136,20 @@ export const updateAdminOrderStatus = async (req: Request, res: Response) => {
       data: { status: status as OrderStatus },
       include: orderInclude,
     });
+
+    if (
+      status === OrderStatus.COMPLETED &&
+      existing.status !== OrderStatus.COMPLETED
+    ) {
+      notifyOrderCompleted(order);
+    }
+
+    if (
+      status === OrderStatus.CANCELLED &&
+      existing.status !== OrderStatus.CANCELLED
+    ) {
+      notifyOrderCancelledByAdmin(order);
+    }
 
     res.json(formatOrder(order));
   } catch (error) {

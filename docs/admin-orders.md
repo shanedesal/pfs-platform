@@ -59,6 +59,8 @@ Shows:
 
 Updating the status calls `PATCH /api/admin/orders/:orderNumber/status` and re-renders the page with the server's response (including the new status badge). The update button is disabled until a different status is chosen.
 
+When an admin sets an order to `COMPLETED`, the server sends a completion email to the customer's snapshotted `order.email` (see [`docs/order-emails.md`](./order-emails.md)). When an admin sets an order to `CANCELLED`, the customer receives an email stating that an administrator cancelled the order.
+
 ## Implementation
 
 ### Data model

@@ -270,6 +270,11 @@ CORS_ORIGIN=http://localhost:3000,http://localhost:3001
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 SUPABASE_STORAGE_BUCKET=pfs-products
+
+# Optional — transactional order emails via Brevo (see docs/order-emails.md)
+BREVO_API_KEY=xkeysib-xxxxxxxx
+BREVO_SENDER_EMAIL=your-verified-sender@gmail.com
+BREVO_SENDER_NAME=PFS
 ```
 
 **`web/.env`:**
