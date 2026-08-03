@@ -4,6 +4,18 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-03 — Deployment doc: seed from local machine (no Render Shell)
+
+- **Doc:** `docs/deployment.md`
+- **What changed:** Document seeding production Supabase from your laptop via `npx prisma db seed`, plus SQL promote-to-admin, since Render Shell is paid-only.
+- **Files:** `docs/deployment.md`
+
+## 2026-08-03 — Deployment doc: Supabase Session pooler for Render (P1001)
+
+- **Doc:** `docs/deployment.md`
+- **What changed:** Document that Render cannot use Supabase Direct connection (`db.*.supabase.co`, IPv6); use Session pooler URI for `DATABASE_URL` instead.
+- **Files:** `docs/deployment.md`
+
 ## 2026-08-03 — Login page: Suspense for useSearchParams (Render build)
 
 - **Doc:** `docs/deployment.md`

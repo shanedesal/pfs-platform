@@ -39,15 +39,19 @@ flowchart LR
 
 1. Supabase Dashboard → **New project** → pick a region close to your Render region (e.g. Oregon / Singapore).
 2. Save the database password securely.
-3. **Project Settings → Database → Connection string → URI** (Direct connection, not pooler, for Prisma migrations on deploy):
+3. **Connect → Session pooler → URI** (required for Render — see note below):
 
    ```
    postgresql://postgres.[project-ref]:[YOUR-PASSWORD]@aws-0-[region].pooler.supabase.com:5432/postgres
    ```
 
-   For small free-tier traffic, the **Session pooler** (port `5432`) or **Direct** connection both work. Copy the URI and replace `[YOUR-PASSWORD]`.
+   Copy the URI, replace `[YOUR-PASSWORD]`, and use it as `DATABASE_URL` on Render.
 
-   > **Tip:** If migrations fail with pooler errors, use the **Direct connection** string from the same page (host `db.[ref].supabase.co`, port `5432`).
+   > **Important (Render / most cloud hosts):** Do **not** use the **Direct** connection (`db.[ref].supabase.co`). That host is IPv6-only; Render cannot reach it and you will see `P1001: Can't reach database server`. Always use the **Session pooler** URI (host `*.pooler.supabase.com`, user `postgres.[project-ref]`).
+
+   > **Password special characters:** If your password contains `@`, `#`, `/`, etc., [URL-encode](https://developer.mozilla.org/en-US/docs/Glossary/Percent-encoding) it in the connection string.
+
+   > **Paused project:** Free Supabase projects pause after ~7 days idle. Dashboard → project → **Restore** if the database is paused.
 
 ### 1b. Storage bucket for product images
 
@@ -106,14 +110,36 @@ Each value must be **≥ 32 characters**.
 
 Production sets `SEED_DB=false`. To load admin/customer demo accounts and sample products once:
 
-1. Render → **pfs-api** → **Shell**
-2. Run:
+**Option A — from your machine (no Render Shell needed)**
 
-   ```bash
-   SEED_DB=true npx prisma db seed
+```bash
+cd server
+DATABASE_URL="postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres" npx prisma db seed
+```
+
+Use the same Session pooler `DATABASE_URL` as on Render. Demo logins from `server/prisma/seed.ts`:
+
+| Account | Email | Password |
+|---------|-------|----------|
+| Admin | `admin@example.com` | `password123` |
+| Customer | `customer@example.com` | `password123` |
+
+**Option B — Render Shell** (paid plans only)
+
+```bash
+SEED_DB=true npx prisma db seed
+```
+
+**Option C — promote your own account**
+
+1. Register on the live site and verify email.
+2. Supabase → **SQL Editor** → run:
+
+   ```sql
+   UPDATE "User" SET role = 'ADMIN' WHERE email = 'your@email.com';
    ```
 
-3. Demo logins are defined in `server/prisma/seed.ts` (change passwords before any public demo).
+Change passwords before any public demo.
 
 ---
 
@@ -195,6 +221,7 @@ Then set `CORS_ORIGIN` and `APP_URL` on the API to the web service URL.
 | Login succeeds but next page is logged out | Cookie `SameSite` / CORS | Ensure `CORS_ORIGIN` exactly matches the web URL (no trailing slash); redeploy API after web URL is known |
 | `Missing required environment variables` | Incomplete API env | Fill all required vars in Render → pfs-api → Environment |
 | Migrations fail on deploy | Wrong `DATABASE_URL` | Use Supabase direct or session connection string; check password |
+| API `P1001: Can't reach database server at db.*.supabase.co` | Direct Supabase URL on Render (IPv6-only) | Switch `DATABASE_URL` to **Session pooler** URI (`*.pooler.supabase.com`, user `postgres.[ref]`) |
 | Image upload fails | Supabase bucket / keys | Bucket `pfs-products` must exist and be public; verify service role key |
 | Homepage empty, API 502 | API cold start or crash | Check pfs-api logs; hit `/health` directly |
 | Web build: `Cannot find module '@tailwindcss/postcss'` | Render skips devDependencies when `NODE_ENV=production` | Use `npm ci --include=dev && npm run build` (already in `render.yaml`) |
