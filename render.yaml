@@ -1,0 +1,68 @@
+# Render Blueprint — PFS Platform
+# Deploy: Render Dashboard → New → Blueprint → connect this repo (deploy branch).
+# Set sync:false secrets when prompted (DATABASE_URL, JWT_*, Supabase, optional Brevo).
+
+services:
+  - type: web
+    name: pfs-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:production
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: SEED_DB
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: pfs-products
+      - key: CORS_ORIGIN
+        fromService:
+          type: web
+          name: pfs-web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: APP_URL
+        fromService:
+          type: web
+          name: pfs-web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: PFS
+
+  - type: web
+    name: pfs-web
+    runtime: node
+    plan: free
+    rootDir: web
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: pfs-api
+          envVarKey: RENDER_EXTERNAL_URL

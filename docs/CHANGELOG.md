@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-03 — Render + Supabase deployment setup
+
+- **Doc:** `docs/deployment.md` (also updated `docs/auth-sessions.md`)
+- **What changed:** Added Render Blueprint (`render.yaml`) to deploy Express API and Next.js storefront as free-tier web services, with Supabase for Postgres and image storage. Production auth cookies use `SameSite=None` for cross-subdomain deploys. Server build runs `prisma generate`; `start:production` runs migrations then starts.
+- **Files:** `render.yaml`, `server/package.json`, `server/.node-version`, `web/.node-version`, `server/src/controllers/auth.controller.ts`, `docs/deployment.md`, `docs/auth-sessions.md`
+
 ## 2026-08-03 — Fix duplicate verify-email race; document rate limits
 
 - **Doc:** `docs/auth-email-verification.md`, `docs/auth-sessions.md`

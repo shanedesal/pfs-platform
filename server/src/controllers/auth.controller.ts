@@ -11,10 +11,13 @@ import {
 import { hashToken, issueTokenPair, revokeRefreshToken } from "../utils/tokens";
 import { normalizePhoneNumber } from "../utils/phone";
 
+// Cross-origin deploys (e.g. Render web + API on different subdomains) require
+// SameSite=None + Secure so browsers send cookies on credentialed fetch requests.
+const isProduction = process.env.NODE_ENV === "production";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict" as const,
+  secure: isProduction,
+  sameSite: (isProduction ? "none" : "strict") as "none" | "strict",
   path: "/",
 };
 

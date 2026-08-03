@@ -8,8 +8,8 @@ PFS authenticates users with httpOnly cookies: a short-lived access token and a 
 
 | Rule | Detail |
 |------|--------|
-| Access cookie | `accessToken`, ~15m, httpOnly, `sameSite=strict`, `secure` in production |
-| Refresh cookie | `refreshToken`, ~7d; JWT signed with `JWT_REFRESH_SECRET`; SHA-256 hash stored in `RefreshToken` |
+| Access cookie | `accessToken`, ~15m, httpOnly; `sameSite=strict` in development; `sameSite=none` + `secure` in production (required for cross-origin Render/Vercel deploys) |
+| Refresh cookie | `refreshToken`, ~7d; same cookie flags as access; JWT signed with `JWT_REFRESH_SECRET`; SHA-256 hash stored in `RefreshToken` |
 | Rotation | Successful `POST /api/auth/refresh` atomically claims (revokes) the presented token, then issues a new pair |
 | Concurrent refresh | Only one request can claim a given token (`updateMany` where `revokedAt` is null). Losers receive `401` without wiping other sessions if the token was revoked within a **30s grace** window |
 | Reuse / theft | Presenting a refresh token that was revoked **more than 30s ago** revokes all remaining refresh tokens for that user |
