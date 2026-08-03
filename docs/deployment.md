@@ -172,7 +172,7 @@ If you prefer creating services by hand:
 **API service**
 
 - Root directory: `server`
-- Build: `npm ci && npm run build`
+- Build: `npm ci --include=dev && npm run build` (dev deps required for `tsc`)
 - Start: `npm run start:production`
 - Health check path: `/health`
 - Node version: 22
@@ -180,7 +180,7 @@ If you prefer creating services by hand:
 **Web service**
 
 - Root directory: `web`
-- Build: `npm ci && npm run build`
+- Build: `npm ci --include=dev && npm run build` (dev deps required for Tailwind/PostCSS)
 - Start: `npm start`
 - Set `NEXT_PUBLIC_API_URL=https://<your-api-host>`
 
@@ -197,6 +197,7 @@ Then set `CORS_ORIGIN` and `APP_URL` on the API to the web service URL.
 | Migrations fail on deploy | Wrong `DATABASE_URL` | Use Supabase direct or session connection string; check password |
 | Image upload fails | Supabase bucket / keys | Bucket `pfs-products` must exist and be public; verify service role key |
 | Homepage empty, API 502 | API cold start or crash | Check pfs-api logs; hit `/health` directly |
+| Web build: `Cannot find module '@tailwindcss/postcss'` | Render skips devDependencies when `NODE_ENV=production` | Use `npm ci --include=dev && npm run build` (already in `render.yaml`) |
 | Emails not sent | Brevo not configured | Set both `BREVO_API_KEY` and `BREVO_SENDER_EMAIL` |
 
 ---

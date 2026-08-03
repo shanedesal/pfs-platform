@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-03 — Render build: install devDependencies for Next/TSC
+
+- **Doc:** `docs/deployment.md`
+- **What changed:** Fixed Render web (and API) build failing with `Cannot find module '@tailwindcss/postcss'` — production `npm ci` omits devDependencies, but Tailwind and TypeScript are required at build time. Build commands now use `npm ci --include=dev`.
+- **Files:** `render.yaml`, `docs/deployment.md`
+
 ## 2026-08-03 — Render + Supabase deployment setup
 
 - **Doc:** `docs/deployment.md` (also updated `docs/auth-sessions.md`)
