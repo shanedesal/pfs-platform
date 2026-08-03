@@ -32,20 +32,34 @@ enum OrderStatus {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  password      String
-  name          String
-  phoneNumber   String?
-  role          Role           @default(CUSTOMER)
+  id              String         @id @default(uuid())
+  email           String         @unique
+  password        String
+  name            String
+  phoneNumber     String?
+  role            Role           @default(CUSTOMER)
   /// Admin-controlled account lock. Disabled accounts can't log in and lose active sessions immediately.
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  refreshTokens RefreshToken[]
-  cart          Cart?
-  orders        Order[]
-  addresses     Address[]
+  isActive        Boolean        @default(true)
+  /// Set true when the user confirms their email (existing seed accounts are backfilled as verified).
+  emailVerified   Boolean        @default(false)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  refreshTokens   RefreshToken[]
+  cart            Cart?
+  orders          Order[]
+  addresses       Address[]
+}
+
+/// Holds signup details until the user verifies their email; no User row is created until then.
+model PendingRegistration {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 /// Saved delivery addresses (Shopee-style address book). Exactly one may be `isDefault` per user.

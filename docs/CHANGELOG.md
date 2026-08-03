@@ -4,6 +4,18 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-03 — Fix duplicate verify-email race; document rate limits
+
+- **Doc:** `docs/auth-email-verification.md`, `docs/auth-sessions.md`
+- **What changed:** Fixed false "invalid or expired" error and UI flash when clicking the verification link — React Strict Mode was firing duplicate verify requests. Frontend dedupes verify calls per token, keeps the loading screen until redirect, and reads the token from the URL directly. Fixed `/api/auth/me` request flood after verify caused by a re-render loop (`applyUser` → effect re-run → `refetch`). Backend returns existing session or signs in an already-verified user on duplicate verify. Added `verifyEmailLimiter` (30/15min/IP).
+- **Files:** `web/src/lib/verify-email.ts`, `web/src/app/verify-email/page.tsx`, `web/src/app/register/check-email/page.tsx`, `server/src/controllers/auth.controller.ts`, `server/src/routes/auth.ts`, `server/src/middleware/rateLimiter.ts`
+
+## 2026-08-03 — Email verification required for new registrations
+
+- **Doc:** `docs/auth-email-verification.md` (also updated `docs/auth-sessions.md`)
+- **What changed:** New signups must verify their email before an account is created. Registration stores details in `PendingRegistration`, sends a Brevo verification link (24h expiry), and creates the `User` only after verification (auto sign-in). Existing users and seed accounts are backfilled as `emailVerified`. Added verify/resend endpoints, `/register/check-email` and `/verify-email` pages, and login redirect for unverified pending registrations.
+- **Files:** `server/prisma/schema.prisma`, `server/prisma/migrations/20260803120000_email_verification/`, `server/prisma/seed.ts`, `server/src/controllers/auth.controller.ts`, `server/src/middleware/auth.middleware.ts`, `server/src/routes/auth.ts`, `server/src/middleware/rateLimiter.ts`, `server/src/utils/verification.ts`, `server/src/utils/app-url.ts`, `server/src/services/email/verification-emails.ts`, `server/src/services/email/templates.ts`, `web/src/app/register/page.tsx`, `web/src/app/register/check-email/page.tsx`, `web/src/app/verify-email/page.tsx`, `web/src/app/login/page.tsx`, `README.md`, `docs/auth-email-verification.md`, `docs/auth-sessions.md`
+
 ## 2026-08-03 — Switch order emails from Resend to Brevo; add admin cancellation email
 
 - **Doc:** `docs/order-emails.md` (also updated `docs/customer-order-management.md`, `docs/admin-orders.md`)

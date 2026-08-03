@@ -275,6 +275,9 @@ SUPABASE_STORAGE_BUCKET=pfs-products
 BREVO_API_KEY=xkeysib-xxxxxxxx
 BREVO_SENDER_EMAIL=your-verified-sender@gmail.com
 BREVO_SENDER_NAME=PFS
+
+# Optional — base URL for verification links in emails (defaults to first CORS_ORIGIN)
+APP_URL=http://localhost:3000
 ```
 
 **`web/.env`:**

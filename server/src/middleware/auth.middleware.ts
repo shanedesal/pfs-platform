@@ -25,10 +25,10 @@ export const authenticate = async (
     const payload = verifyAccessToken(token);
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, role: true, isActive: true },
+      select: { id: true, role: true, isActive: true, emailVerified: true },
     });
 
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive || !user.emailVerified) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 

@@ -17,12 +17,15 @@ PFS authenticates users with httpOnly cookies: a short-lived access token and a 
 | Client single-flight | `authFetch` shares one in-flight refresh promise so parallel `401`s do not stampede `/refresh` |
 | Rate limits | Login: 5 failed / 15m / IP; Register: 10 / hour / IP; Refresh: 30 / 15m / IP; Logout: 60 / 15m / IP |
 | Disabled accounts | `authenticate` loads `User.isActive` on every request and returns `401` if false, even with a still-valid access token; `login` returns `403` for a disabled account. See [`docs/customer-management.md`](./customer-management.md) |
+| Email verification | New signups must verify email before a `User` is created; see [`docs/auth-email-verification.md`](./auth-email-verification.md). Existing/seed accounts are backfilled as verified. Rate limits on register, resend, and verify endpoints. |
 
 ### Endpoints
 
 | Method | Path | Auth | Limiter |
 |--------|------|------|---------|
-| POST | `/api/auth/register` | Public | `registerLimiter` |
+| POST | `/api/auth/register` | Public | `registerLimiter` — creates pending registration, sends verification email (`202`, no session) |
+| POST | `/api/auth/verify-email` | Public | — — completes signup after email link |
+| POST | `/api/auth/resend-verification` | Public | `resendVerificationLimiter` |
 | POST | `/api/auth/login` | Public | `loginLimiter` |
 | POST | `/api/auth/refresh` | Refresh cookie | `refreshLimiter` |
 | POST | `/api/auth/logout` | Optional refresh cookie | `logoutLimiter` |

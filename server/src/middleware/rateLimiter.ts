@@ -48,3 +48,20 @@ export const addressWriteLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many address changes. Try again later." },
 });
+
+export const resendVerificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many verification emails requested. Try again later." },
+});
+
+/** Caps brute-force attempts against verification tokens. */
+export const verifyEmailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many verification attempts. Try again later." },
+});

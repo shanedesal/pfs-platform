@@ -36,7 +36,7 @@ function renderLineItems(order: OrderWithItems): string {
     .map(
       (item) => `
       <tr>
-        <td style="padding:10px 0;border-bottom:1px solid ${COLORS.paperSoft};color:${COLORS.ink};">${escapeHtml(item.productName)}</td>
+          <td style="padding:10px 0;border-bottom:1px solid ${COLORS.paperSoft};color:${COLORS.ink};">${escapeHtml(item.productName)}</td>
         <td style="padding:10px 0;border-bottom:1px solid ${COLORS.paperSoft};text-align:center;color:${COLORS.ink};">${item.quantity}</td>
         <td style="padding:10px 0;border-bottom:1px solid ${COLORS.paperSoft};text-align:right;font-family:ui-monospace,monospace;color:${COLORS.brand};">${formatMoney(Number(item.lineTotal))}</td>
       </tr>`
@@ -169,5 +169,31 @@ export function orderCancelledByAdminEmail(order: OrderWithItems): { subject: st
   return {
     subject: `Order ${order.orderNumber} cancelled by admin`,
     html: emailLayout(`Order ${order.orderNumber} cancelled by admin`, body),
+  };
+}
+
+export function emailVerificationEmail(params: {
+  name: string;
+  verifyUrl: string;
+}): { subject: string; html: string } {
+  const name = escapeHtml(params.name);
+  const verifyUrl = escapeHtml(params.verifyUrl);
+  const body = `
+    ${emailHeading("Verify your email")}
+    ${emailLead(`Hi ${name}, thanks for signing up for PFS. Confirm your email address to finish creating your account.`)}
+    <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="border-radius:9999px;background:${COLORS.brand};">
+          <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:${COLORS.white};text-decoration:none;">Verify email</a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:${COLORS.slate};">Or copy this link into your browser:</p>
+    <p style="margin:0;font-size:13px;line-height:1.6;word-break:break-all;color:${COLORS.brand};">${verifyUrl}</p>
+    ${emailFooter("This link expires in 24 hours. If you did not create an account, you can ignore this email.")}`;
+
+  return {
+    subject: "Verify your PFS account",
+    html: emailLayout("Verify your PFS account", body),
   };
 }

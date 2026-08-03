@@ -6,6 +6,8 @@ import {
   logout,
   me,
   updateProfile,
+  verifyEmail,
+  resendVerification,
 } from "../controllers/auth.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import {
@@ -14,11 +16,15 @@ import {
   refreshLimiter,
   logoutLimiter,
   updateProfileLimiter,
+  resendVerificationLimiter,
+  verifyEmailLimiter,
 } from "../middleware/rateLimiter";
 
 const router = Router();
 
 router.post("/register", registerLimiter, register);
+router.post("/verify-email", verifyEmailLimiter, verifyEmail);
+router.post("/resend-verification", resendVerificationLimiter, resendVerification);
 router.post("/login", loginLimiter, login);
 router.post("/refresh", refreshLimiter, refresh);
 router.post("/logout", logoutLimiter, logout);

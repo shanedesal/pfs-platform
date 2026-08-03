@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const res = await authFetch("/api/auth/me");
       if (res.ok) {
@@ -53,11 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchUser();
-  }, []);
+    void fetchUser();
+  }, [fetchUser]);
 
   const logout = async () => {
     await apiFetch("/api/auth/logout", { method: "POST" });
@@ -65,10 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = "/";
   };
 
-  const applyUser = (data: User) => {
+  const applyUser = useCallback((data: User) => {
     setUser(data);
     setLoading(false);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The server sends transactional emails when certain order events occur:
+The server sends transactional emails when certain order events occur, and when a new customer verifies their email at registration (see [`docs/auth-email-verification.md`](./auth-email-verification.md)).
 
 | Event | Trigger | Recipient |
 |-------|---------|-----------|

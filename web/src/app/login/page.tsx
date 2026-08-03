@@ -35,6 +35,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.code === "EMAIL_NOT_VERIFIED" && data.email) {
+          router.push(
+            `/register/check-email?email=${encodeURIComponent(data.email)}`
+          );
+          return;
+        }
         setError(data.message || "Invalid email or password");
         setLoading(false);
         return;

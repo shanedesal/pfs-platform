@@ -1,7 +1,13 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import prisma from "../config/db";
-import { verifyRefreshToken } from "../utils/jwt";
+import { sendRegistrationVerificationEmail } from "../services/email/verification-emails";
+import { verifyRefreshToken, verifyAccessToken } from "../utils/jwt";
+import {
+  generateVerificationToken,
+  hashVerificationToken,
+  verificationExpiresAt,
+} from "../utils/verification";
 import { hashToken, issueTokenPair, revokeRefreshToken } from "../utils/tokens";
 import { normalizePhoneNumber } from "../utils/phone";
 
@@ -13,7 +19,6 @@ const COOKIE_OPTIONS = {
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Precomputed bcrypt hash so missing-user logins still pay the compare cost
 const DUMMY_PASSWORD_HASH =
   "$2b$12$GVVRviBQHhuHKUx2adJZQe7EyXLfMEsMiXNMJJoJiZYrwQeH/dtum";
 
@@ -30,42 +35,173 @@ function setAuthCookies(
     });
 }
 
+function serializeUser(user: {
+  id: string;
+  email: string;
+  name: string;
+  phoneNumber: string | null;
+  role: string;
+  createdAt: Date;
+}) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    phoneNumber: user.phoneNumber,
+    role: user.role,
+    createdAt: user.createdAt,
+  };
+}
+
+function parseRegisterFields(body: unknown):
+  | { ok: true; email: string; password: string; name: string }
+  | { ok: false; message: string } {
+  const { email, password, name } = (body ?? {}) as Record<string, unknown>;
+
+  if (!email || !password || !name) {
+    return { ok: false, message: "Missing required fields" };
+  }
+
+  if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
+    return { ok: false, message: "Invalid email address" };
+  }
+
+  if (typeof password !== "string" || password.length < 8) {
+    return { ok: false, message: "Password must be at least 8 characters" };
+  }
+
+  if (typeof name !== "string" || name.trim().length < 1) {
+    return { ok: false, message: "Name is required" };
+  }
+
+  return {
+    ok: true,
+    email: email.trim().toLowerCase(),
+    password,
+    name: name.trim(),
+  };
+}
+
+async function createOrRefreshPendingRegistration(params: {
+  email: string;
+  name: string;
+  password: string;
+}): Promise<{ rawToken: string }> {
+  const hashedPassword = await bcrypt.hash(params.password, 12);
+  const rawToken = generateVerificationToken();
+  const tokenHash = hashVerificationToken(rawToken);
+  const expiresAt = verificationExpiresAt();
+
+  await prisma.pendingRegistration.upsert({
+    where: { email: params.email },
+    create: {
+      email: params.email,
+      name: params.name,
+      password: hashedPassword,
+      tokenHash,
+      expiresAt,
+    },
+    update: {
+      name: params.name,
+      password: hashedPassword,
+      tokenHash,
+      expiresAt,
+    },
+  });
+
+  return { rawToken };
+}
+
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = req.body;
-
-    if (!email || !password || !name) {
-      return res.status(400).json({ message: "Missing required fields" });
+    const parsed = parseRegisterFields(req.body);
+    if (!parsed.ok) {
+      return res.status(400).json({ message: parsed.message });
     }
 
-    if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
-      return res.status(400).json({ message: "Invalid email address" });
-    }
+    const { email, password, name } = parsed;
 
-    if (typeof password !== "string" || password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters" });
-    }
-
-    if (typeof name !== "string" || name.trim().length < 1) {
-      return res.status(400).json({ message: "Name is required" });
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
-
-    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-    if (existing) {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
       return res.status(409).json({ message: "Email already in use" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const { rawToken } = await createOrRefreshPendingRegistration({ email, name, password });
 
-    const user = await prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        password: hashedPassword,
-        name: name.trim(),
-        role: "CUSTOMER",
-      },
+    sendRegistrationVerificationEmail({ email, name, token: rawToken });
+
+    return res.status(202).json({
+      message: "Check your email to verify your account before signing in.",
+      email,
+    });
+  } catch (error) {
+    console.error("Registration failed:", error);
+    res.status(500).json({ message: "Registration failed" });
+  }
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const token = typeof req.body?.token === "string" ? req.body.token.trim() : "";
+    if (!token) {
+      return res.status(400).json({ message: "Verification token is required" });
+    }
+
+    const tokenHash = hashVerificationToken(token);
+    const pending = await prisma.pendingRegistration.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!pending || pending.expiresAt <= new Date()) {
+      // Parallel duplicate verify (e.g. React Strict Mode) may have already succeeded.
+      const accessToken = req.cookies?.accessToken;
+      if (accessToken) {
+        try {
+          const payload = verifyAccessToken(accessToken);
+          const sessionUser = await prisma.user.findUnique({
+            where: { id: payload.userId },
+          });
+          if (sessionUser?.emailVerified) {
+            return res.json(serializeUser(sessionUser));
+          }
+        } catch {
+          // fall through
+        }
+      }
+
+      return res.status(400).json({
+        message: "This verification link is invalid or has expired. Request a new one.",
+        code: "INVALID_VERIFICATION_TOKEN",
+      });
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email: pending.email } });
+    if (existingUser) {
+      await prisma.pendingRegistration.delete({ where: { id: pending.id } }).catch(() => {});
+      if (existingUser.emailVerified) {
+        const { accessToken, refreshToken } = await issueTokenPair({
+          userId: existingUser.id,
+          role: existingUser.role,
+        });
+        return setAuthCookies(res, accessToken, refreshToken).json(serializeUser(existingUser));
+      }
+      return res.status(409).json({ message: "Email already in use" });
+    }
+
+    const now = new Date();
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email: pending.email,
+          password: pending.password,
+          name: pending.name,
+          role: "CUSTOMER",
+          emailVerified: true,
+          emailVerifiedAt: now,
+        },
+      });
+      await tx.pendingRegistration.delete({ where: { id: pending.id } });
+      return created;
     });
 
     const { accessToken, refreshToken } = await issueTokenPair({
@@ -73,19 +209,51 @@ export const register = async (req: Request, res: Response) => {
       role: user.role,
     });
 
-    setAuthCookies(res, accessToken, refreshToken)
-      .status(201)
-      .json({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        phoneNumber: user.phoneNumber,
-        role: user.role,
-        createdAt: user.createdAt,
-      });
+    setAuthCookies(res, accessToken, refreshToken).json(serializeUser(user));
   } catch (error) {
-    console.error("Registration failed:", error);
-    res.status(500).json({ message: "Registration failed" });
+    console.error("Email verification failed:", error);
+    res.status(500).json({ message: "Email verification failed" });
+  }
+};
+
+export const resendVerification = async (req: Request, res: Response) => {
+  try {
+    const email =
+      typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+
+    if (!email || !EMAIL_RE.test(email)) {
+      return res.status(400).json({ message: "A valid email address is required" });
+    }
+
+    const pending = await prisma.pendingRegistration.findUnique({ where: { email } });
+
+    // Generic response — do not reveal whether a pending registration exists.
+    const genericMessage =
+      "If that email has a pending registration, we sent a new verification link.";
+
+    if (!pending) {
+      return res.json({ message: genericMessage });
+    }
+
+    const rawToken = generateVerificationToken();
+    await prisma.pendingRegistration.update({
+      where: { id: pending.id },
+      data: {
+        tokenHash: hashVerificationToken(rawToken),
+        expiresAt: verificationExpiresAt(),
+      },
+    });
+
+    sendRegistrationVerificationEmail({
+      email: pending.email,
+      name: pending.name,
+      token: rawToken,
+    });
+
+    return res.json({ message: genericMessage });
+  } catch (error) {
+    console.error("Resend verification failed:", error);
+    res.status(500).json({ message: "Failed to resend verification email" });
   }
 };
 
@@ -100,11 +268,26 @@ export const login = async (req: Request, res: Response) => {
     const normalizedEmail = email.trim().toLowerCase();
     const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
-    // Always run bcrypt.compare to avoid email enumeration via timing
-    const hash = user?.password ?? DUMMY_PASSWORD_HASH;
-    const validPassword = await bcrypt.compare(password, hash);
+    if (!user) {
+      const pending = await prisma.pendingRegistration.findUnique({
+        where: { email: normalizedEmail },
+      });
+      const valid = await bcrypt.compare(password, pending?.password ?? DUMMY_PASSWORD_HASH);
 
-    if (!user || !validPassword) {
+      if (pending && valid) {
+        return res.status(403).json({
+          message: "Verify your email before signing in. Check your inbox for the confirmation link.",
+          code: "EMAIL_NOT_VERIFIED",
+          email: normalizedEmail,
+        });
+      }
+
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password);
+
+    if (!validPassword) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -112,19 +295,20 @@ export const login = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "This account has been disabled. Contact support for help." });
     }
 
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        message: "Verify your email before signing in.",
+        code: "EMAIL_NOT_VERIFIED",
+        email: user.email,
+      });
+    }
+
     const { accessToken, refreshToken } = await issueTokenPair({
       userId: user.id,
       role: user.role,
     });
 
-    setAuthCookies(res, accessToken, refreshToken).json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      phoneNumber: user.phoneNumber,
-      role: user.role,
-      createdAt: user.createdAt,
-    });
+    setAuthCookies(res, accessToken, refreshToken).json(serializeUser(user));
   } catch (error) {
     console.error("Login failed:", error);
     res.status(500).json({ message: "Login failed" });
@@ -145,7 +329,6 @@ export const refresh = async (req: Request, res: Response) => {
     const tokenHash = hashToken(token);
     const now = new Date();
 
-    // Atomically claim the token so only one concurrent refresh succeeds
     const claimed = await prisma.refreshToken.updateMany({
       where: {
         tokenHash,
@@ -159,10 +342,10 @@ export const refresh = async (req: Request, res: Response) => {
     if (claimed.count === 1) {
       const user = await prisma.user.findUnique({
         where: { id: payload.userId },
-        select: { id: true, role: true },
+        select: { id: true, role: true, emailVerified: true, isActive: true },
       });
 
-      if (!user) {
+      if (!user || !user.isActive || !user.emailVerified) {
         return res.status(401).json({ message: "Invalid refresh token" });
       }
 
@@ -176,7 +359,6 @@ export const refresh = async (req: Request, res: Response) => {
       });
     }
 
-    // Claim failed — distinguish concurrent rotation from stolen-token reuse
     const stored = await prisma.refreshToken.findUnique({
       where: { tokenHash },
     });
@@ -225,15 +407,16 @@ export const me = async (req: Request, res: Response) => {
         name: true,
         phoneNumber: true,
         role: true,
+        emailVerified: true,
         createdAt: true,
       },
     });
 
-    if (!user) {
+    if (!user || !user.emailVerified) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    res.json(user);
+    res.json(serializeUser(user));
   } catch (error) {
     console.error("Failed to fetch user:", error);
     res.status(500).json({ message: "Failed to fetch user" });
@@ -265,7 +448,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       },
     });
 
-    res.json(user);
+    res.json(serializeUser(user));
   } catch (error) {
     console.error("Failed to update profile:", error);
     res.status(500).json({ message: "Failed to update profile" });

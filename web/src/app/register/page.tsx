@@ -3,12 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { applyUser, refetch } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,19 +32,8 @@ export default function RegisterPage() {
         return;
       }
 
-      if (data?.id) {
-        applyUser({
-          id: data.id,
-          email: data.email,
-          name: data.name,
-          phoneNumber: data.phoneNumber ?? null,
-          role: data.role,
-        });
-      }
-
-      void refetch();
-      router.push(data.role === "ADMIN" ? "/admin" : "/");
-      router.refresh();
+      const registeredEmail = data.email || email.trim().toLowerCase();
+      router.push(`/register/check-email?email=${encodeURIComponent(registeredEmail)}`);
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
@@ -98,7 +85,7 @@ export default function RegisterPage() {
           disabled={loading}
           className="mt-2 rounded-full bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-dark disabled:opacity-60"
         >
-          {loading ? "Creating account..." : "Create account"}
+          {loading ? "Sending verification..." : "Create account"}
         </button>
       </form>
 
