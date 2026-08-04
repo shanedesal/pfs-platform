@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 type ModalProps = {
@@ -23,9 +24,11 @@ export default function Modal({ open, onClose, title, children, widthClassName =
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  // Portal out of any parent <form> (e.g. checkout) so nested forms are valid
+  // and submit events do not bubble into the surrounding page form.
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <div
@@ -37,6 +40,7 @@ export default function Modal({ open, onClose, title, children, widthClassName =
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink dark:text-paper">{title}</h2>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close"
             className="flex h-8 w-8 items-center justify-center rounded-full text-slate transition hover:bg-paper-soft hover:text-ink dark:hover:bg-ink dark:hover:text-paper"
@@ -46,6 +50,7 @@ export default function Modal({ open, onClose, title, children, widthClassName =
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

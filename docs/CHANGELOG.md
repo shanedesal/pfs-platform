@@ -4,6 +4,18 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-04 — Fix checkout add-address nested form submit
+
+- **Doc:** `docs/checkout-orders.md`
+- **What changed:** Saving a new delivery address on checkout no longer bubbles into the checkout form (which showed validation errors / blocked create). Settings/account was unaffected because it is not nested in another form. Modal now portals to `document.body`; AddressForm stops submit propagation.
+- **Files:** `web/src/components/storefront/modal.tsx`, `web/src/components/storefront/address-form.tsx`, `docs/checkout-orders.md`
+
+## 2026-08-04 — Docker web API proxy uses compose service name
+
+- **Doc:** `docs/docker-local-dev.md`
+- **What changed:** `pfs_web` was rewriting `/api/*` to `http://localhost:5000`, which fails inside the container (`ECONNREFUSED`). Compose now sets `API_PROXY_TARGET` and `NEXT_PUBLIC_API_URL` to `http://server:5000`.
+- **Files:** `docker-compose.yml`, `docs/docker-local-dev.md`
+
 ## 2026-08-03 — Fix mobile (Safari/iOS) login via same-origin API proxy
 
 - **Doc:** `docs/auth-sessions.md`, `docs/deployment.md`, `docs/frontend-api-client.md`

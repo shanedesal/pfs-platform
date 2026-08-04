@@ -139,3 +139,5 @@ Key files:
 Added Order/OrderItem schema, CUSTOMER-only orders API (place + fetch), checkout form with all required fields and payment options, and order confirmation page with generated order number and summary. No payment gateway integration.
 
 **2026-08-02:** Replaced the free-text delivery address textarea with a `DeliveryAddressPicker` that selects from the customer's saved address book (`/account`). `POST /api/orders` now takes `addressId` instead of `deliveryAddress`; the server looks up the address (rejecting it with `400` if missing or not owned by the caller) and formats it into the same `deliveryAddress` text snapshot column on `Order`. First-time customers with no saved addresses get an inline empty state to add one without leaving checkout.
+
+**2026-08-04:** Fixed checkout "Add address" appearing broken while `/account` worked. The add-address modal rendered *inside* `CheckoutForm`'s `<form>` (Modal was not portaled), so saving the address bubbled a `submit` into checkout and triggered order validation instead of a clean create. `Modal` now portals to `document.body`, and `AddressForm` calls `stopPropagation()` on submit.

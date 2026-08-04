@@ -50,6 +50,10 @@ services:
     environment:
       # Raise V8 heap so Next's 80%-of-limit memory restart is less aggressive in Docker.
       NODE_OPTIONS: --max-old-space-size=4096
+      # Inside the web container, localhost:5000 is the web container itself — not the API.
+      # Compose service name reaches pfs_server on the Docker network (rewrites + SSR).
+      API_PROXY_TARGET: http://server:5000
+      NEXT_PUBLIC_API_URL: http://server:5000
     # Webpack in Docker — see docs/docker-local-dev.md (Turbopack memory restarts).
     command: ["npm", "run", "dev", "--", "--webpack"]
     depends_on:

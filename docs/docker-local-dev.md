@@ -85,9 +85,23 @@ A restart alone also works if you prefer — startup runs `generate` → `migrat
 
 Optional later: upgrade Next.js past 16.2.x for Turbopack memory-eviction improvements (needs explicit package approval).
 
+### API proxy inside Docker (`ECONNREFUSED` on `localhost:5000`)
+
+Browser calls use same-origin `/api/*`. Next.js rewrites those to the Express API (`web/next.config.ts`). Host-only `NEXT_PUBLIC_API_URL=http://localhost:5000` is wrong **inside** `pfs_web`: `localhost` is the web container, so logs show `Failed to proxy http://localhost:5000/... ECONNREFUSED`.
+
+Compose sets:
+
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `API_PROXY_TARGET` | `http://server:5000` | Rewrite destination (compose DNS name for `pfs_server`) |
+| `NEXT_PUBLIC_API_URL` | `http://server:5000` | SSR `apiFetch` when there is no `window` |
+
+After changing these, restart web so Next reloads config: `docker compose up -d web`.
+
 ## Changes
 
 - Enabled `SEED_DB=true` for the development phase so fresh volumes get admin/customer accounts after `docker compose up`.
 - Startup now runs `prisma generate` before migrate/seed so schema changes (e.g. `Category`) are reflected in the client inside the anonymous `node_modules` volume.
 - Web container uses webpack + raised Node heap to avoid Turbopack memory-threshold restart loops that made storefront routes feel very slow.
 - Added `web/.dockerignore` and rebuild guidance so a host Turbopack `.next` is not copied into the image / anonymous volume (fixes chunk-type inference errors after switching to webpack).
+- **2026-08-04:** Set `API_PROXY_TARGET` / `NEXT_PUBLIC_API_URL` to `http://server:5000` on the web service so Docker rewrites and SSR reach the API (fixes `ECONNREFUSED` proxy logs).

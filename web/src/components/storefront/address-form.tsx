@@ -49,6 +49,7 @@ export default function AddressForm({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (pending) return;
 
     if (!form.addressLine1.trim()) {
