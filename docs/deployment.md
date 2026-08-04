@@ -8,7 +8,7 @@ Deploy PFS to production using **Render** for the Express API and Next.js storef
 flowchart LR
   Browser --> Web["pfs-web.onrender.com\nNext.js"]
   Browser -->|"same-origin /api/*"| Web
-  Web -->|"rewrite proxy"| API["pfs-api.onrender.com\nExpress"]
+  Web -->|"rewrite proxy"| API["pfs-api-bzyj.onrender.com\nExpress"]
   API --> DB["Supabase PostgreSQL"]
   API --> Storage["Supabase Storage\npfs-products bucket"]
   API --> Brevo["Brevo\noptional emails"]

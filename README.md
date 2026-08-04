@@ -2,11 +2,40 @@
 
 A full-stack marketplace web application inspired by Shopee. Customers browse and search products, manage a persistent cart, and place orders. Admins manage the catalog, categories, orders, and customer accounts from a dedicated back office.
 
-| Service    | URL (local)              |
-|------------|--------------------------|
-| Storefront | http://localhost:3000    |
-| API        | http://localhost:5000    |
-| PostgreSQL | localhost:5433           |
+## Table of contents
+
+- [Live demo](#live-demo)
+- [Tech stack](#tech-stack)
+- [Current features](#current-features)
+- [Authentication flows](#authentication-flows)
+  - [Demo accounts](#demo-accounts-seed-data)
+- [Project structure](#project-structure)
+- [Getting started (local)](#getting-started-local)
+- [API overview](#api-overview)
+  - [Public](#public)
+  - [Authenticated](#authenticated-any-role)
+  - [Customer only](#customer-only)
+  - [Admin only](#admin-only-admin-role)
+- [Documentation](#documentation)
+- [Known limitations](#known-limitations)
+- [License](#license)
+
+## Live demo
+
+| Service    | URL |
+|------------|-----|
+| Storefront | [https://pfs-web.onrender.com/](https://pfs-web.onrender.com/) |
+| API        | [https://pfs-api-bzyj.onrender.com](https://pfs-api-bzyj.onrender.com) |
+
+> Free-tier Render services spin down after ~15 minutes idle. The first request after idle can take 30–60 seconds.
+
+### Local development URLs
+
+| Service    | URL |
+|------------|-----|
+| Storefront | http://localhost:3000 |
+| API        | http://localhost:5000 |
+| PostgreSQL | localhost:5433 |
 
 ---
 
@@ -32,6 +61,7 @@ A full-stack marketplace web application inspired by Shopee. Customers browse an
 | ORM          | [Prisma 7](https://www.prisma.io/) with `@prisma/adapter-pg` |
 | Auth         | [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken), [bcryptjs](https://github.com/dcodeIO/bcrypt.js) |
 | Security     | [helmet](https://helmetjs.github.io/), [cors](https://github.com/expressjs/cors) (credentials), [express-rate-limit](https://github.com/express-rate-limit/express-rate-limit) |
+| Email        | [Brevo](https://www.brevo.com/) (verification + order emails) |
 | File uploads | [multer](https://github.com/expressjs/multer) → [Supabase Storage](https://supabase.com/docs/guides/storage) |
 | Storage SDK  | [@supabase/supabase-js](https://supabase.com/docs/reference/javascript/introduction) |
 
@@ -39,8 +69,9 @@ A full-stack marketplace web application inspired by Shopee. Customers browse an
 
 | Layer          | Technology |
 |----------------|------------|
-| Database       | PostgreSQL 16 |
+| Database       | PostgreSQL 16 (local Docker / Supabase in production) |
 | Migrations     | Prisma Migrate |
+| Hosting        | Render (web + API), Supabase (Postgres + Storage) |
 | Orchestration  | Docker Compose — `postgres`, `server`, `web` |
 | Dev tooling    | nodemon + tsx (server), Next.js dev with webpack in Docker |
 
@@ -56,7 +87,9 @@ A full-stack marketplace web application inspired by Shopee. Customers browse an
 | `/products` | Product catalog — search (`?q=`), category filter (`?category=`), price sort (`?sort=`), paginated "Show more" |
 | `/products/[id]` | Product detail — image gallery, quantity selector, Add to Cart, Checkout shortcut |
 | `/login` | Sign in; supports `?redirect=` for post-login return |
-| `/register` | Create a customer account |
+| `/register` | Start customer signup (email verification required) |
+| `/register/check-email` | Prompt to verify email; resend link |
+| `/verify-email` | Completes signup from email link (`?token=`) |
 
 ### Storefront (authenticated customer)
 
@@ -75,7 +108,7 @@ A full-stack marketplace web application inspired by Shopee. Customers browse an
 
 | Route | Description |
 |-------|-------------|
-| `/admin` | Dashboard — product count, customer count |
+| `/admin` | Dashboard — products, orders, pending/completed counts, customers, completed sales total |
 | `/admin/products` | Product CRUD — search/filter/pagination, cover + gallery image upload, status (Active / Inactive / Out of Stock) |
 | `/admin/categories` | Category CRUD — delete blocked when products reference the category |
 | `/admin/orders` | Order table — search, filter, pagination |
@@ -99,6 +132,8 @@ Checkout records Cash on Delivery, E-Wallet, or Bank Transfer as labels only —
 ## Authentication flows
 
 PFS uses **httpOnly cookie-based JWT sessions**. The browser never stores tokens in `localStorage`; all authenticated API calls send cookies via `credentials: "include"`.
+
+In production, the storefront proxies `/api/*` to the Express API (same-origin cookies). See [`docs/deployment.md`](docs/deployment.md) and [`docs/auth-sessions.md`](docs/auth-sessions.md).
 
 | Cookie | Lifetime | Purpose |
 |--------|----------|---------|
@@ -137,7 +172,7 @@ sequenceDiagram
 5. Redirect: **ADMIN** → `/admin`; **CUSTOMER** → `?redirect=` param or `/`.
 6. Protected routes that sent guests to login preserve the return URL, e.g. `/login?redirect=/cart`.
 
-**Register flow** (`/register`): Same cookie pattern via `POST /api/auth/register`. New accounts are always `CUSTOMER` role.
+**Register flow** (`/register`): `POST /api/auth/register` stores a pending registration and emails a verification link (Brevo). No session cookies until `POST /api/auth/verify-email` succeeds. See [`docs/auth-email-verification.md`](docs/auth-email-verification.md).
 
 **Logout:** `POST /api/auth/logout` revokes the refresh token in the database, clears both cookies, and redirects to `/`.
 
@@ -185,7 +220,7 @@ sequenceDiagram
 | `admin@example.com` | `password123` | ADMIN |
 | `customer@example.com` | `password123` | CUSTOMER |
 
-Seeded when `SEED_DB=true` (default in Docker development).
+Seeded when `SEED_DB=true` (default in Docker development). Demo accounts are already email-verified.
 
 ---
 
@@ -195,6 +230,7 @@ Seeded when `SEED_DB=true` (default in Docker development).
 pfs-platform/
 ├── docker-compose.yml       # postgres + server + web
 ├── docs/                    # Feature documentation + CHANGELOG
+├── render.yaml              # Render Blueprint (production)
 ├── server/
 │   ├── prisma/
 │   │   ├── schema.prisma    # Data model
@@ -205,6 +241,7 @@ pfs-platform/
 │       ├── controllers/     # Route handlers
 │       ├── middleware/      # auth, rate limits, upload
 │       ├── routes/          # API route definitions
+│       ├── services/        # Email (Brevo) and related
 │       └── utils/           # JWT, tokens, env, phone formatting
 └── web/
     └── src/
@@ -217,7 +254,8 @@ pfs-platform/
 
 ### Data model (high level)
 
-- **User** — email, password hash, name, phone number, role (`ADMIN` / `CUSTOMER`), `isActive`
+- **User** — email, password hash, name, phone number, role (`ADMIN` / `CUSTOMER`), `isActive`, email verification flags
+- **PendingRegistration** — pre-verify signup details + token hash
 - **RefreshToken** — hashed refresh tokens with revocation tracking
 - **Category** — product categories with sort order
 - **Product** — name, price, stock, cover image, status, gallery (`ProductImage`)
@@ -227,23 +265,27 @@ pfs-platform/
 
 ---
 
-## Getting started
+## Getting started (local)
 
 ### Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- A [Supabase](https://supabase.com/) project (Storage bucket for product images — required even for non-upload features)
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose (recommended path)
+- Node.js 22+ if running services on the host without Docker
+- A [Supabase](https://supabase.com/) project with a public Storage bucket for product images (required at API startup even if you are not uploading yet)
+- Optional: [Brevo](https://www.brevo.com/) API key for verification and order emails
 
-### 1. Clone and configure environment
+### 1. Clone the repo
 
 ```bash
 git clone <repo-url>
 cd pfs-platform
 ```
 
-Create these env files (no `.env.example` is committed yet — use the templates below):
+### 2. Create environment files
 
-**Root `.env`** (PostgreSQL service):
+Create these files (no `.env.example` is committed yet — use the templates below).
+
+**Root `.env`** (PostgreSQL Compose service):
 
 ```env
 DB_USER=pfs_admin
@@ -258,6 +300,8 @@ PORT=5000
 NODE_ENV=development
 SEED_DB=true
 
+# Inside Docker Compose, host is the service name `postgres` on port 5432.
+# On the host (no Docker for the API), use localhost:5433 instead.
 DATABASE_URL=postgresql://pfs_admin:your_secure_password@postgres:5432/pfs_platform_db
 
 JWT_SECRET=your_jwt_secret_at_least_32_characters_long
@@ -271,41 +315,63 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 SUPABASE_STORAGE_BUCKET=pfs-products
 
-# Optional — transactional order emails via Brevo (see docs/order-emails.md)
+# Optional — transactional emails via Brevo (verification + orders)
 BREVO_API_KEY=xkeysib-xxxxxxxx
 BREVO_SENDER_EMAIL=your-verified-sender@gmail.com
 BREVO_SENDER_NAME=PFS
 
-# Optional — base URL for verification links in emails (defaults to first CORS_ORIGIN)
+# Optional — base URL for links in emails (defaults to first CORS_ORIGIN)
 APP_URL=http://localhost:3000
 ```
 
 **`web/.env`:**
 
 ```env
+# Used when running Next on the host. Docker Compose overrides this to http://server:5000.
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
-> When running the server outside Docker, change `DATABASE_URL` to use `localhost:5433` instead of `postgres:5432`.
-
-### 2. Start with Docker Compose
+### 3. Start with Docker Compose (recommended)
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
-The server container automatically runs:
+On first start, the server container runs:
 
 1. `prisma generate`
 2. `prisma migrate deploy`
 3. `prisma db seed` (when `SEED_DB=true`)
 4. `npm run dev`
 
-Open http://localhost:3000 and sign in with a demo account.
+The web container proxies browser `/api/*` calls to the API via the Compose service name (`http://server:5000`). See [`docs/docker-local-dev.md`](docs/docker-local-dev.md).
 
-### 3. Run without Docker (optional)
+### 4. Verify the stack
 
-Requires a local PostgreSQL instance.
+```bash
+# API health
+curl http://localhost:5000/health
+
+# Storefront
+open http://localhost:3000   # or visit in a browser
+```
+
+Sign in with a [demo account](#demo-accounts-seed-data).
+
+Useful commands:
+
+```bash
+docker compose logs -f server   # API logs
+docker compose logs -f web      # Next.js logs
+docker compose restart server   # re-run generate/migrate/seed on start
+docker compose down             # stop (keeps Postgres volume)
+```
+
+### 5. Run without Docker (optional)
+
+Requires a local PostgreSQL instance (or only Postgres via Compose: `docker compose up -d postgres`).
+
+Point `server/.env` `DATABASE_URL` at `localhost:5433` if using Compose Postgres.
 
 ```bash
 # Terminal 1 — API
@@ -321,19 +387,32 @@ npm install
 npm run dev                        # http://localhost:3000
 ```
 
+More detail: [`docs/docker-local-dev.md`](docs/docker-local-dev.md). Production deploy: [`docs/deployment.md`](docs/deployment.md).
+
 ---
 
 ## API overview
+
+Base URLs:
+
+| Environment | Base |
+|-------------|------|
+| Production  | `https://pfs-api-bzyj.onrender.com` |
+| Local       | `http://localhost:5000` |
+
+From the storefront in the browser, prefer same-origin `/api/...` (Next.js rewrite proxy). Direct API calls below are useful for health checks, Postman, or SSR.
 
 ### Public
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/health` | Health check |
-| POST | `/api/auth/register` | Create customer account |
+| POST | `/api/auth/register` | Start signup — pending registration + verification email (`202`) |
+| POST | `/api/auth/verify-email` | Confirm email token; create user and sign in |
+| POST | `/api/auth/resend-verification` | Resend verification email for a pending signup |
 | POST | `/api/auth/login` | Sign in |
-| POST | `/api/auth/refresh` | Rotate token pair |
-| POST | `/api/auth/logout` | Sign out |
+| POST | `/api/auth/refresh` | Rotate access/refresh cookie pair |
+| POST | `/api/auth/logout` | Sign out; revoke refresh token |
 | GET | `/api/homepage/featured` | Featured products (up to 8) |
 | GET | `/api/homepage/categories` | Homepage category list |
 | GET | `/api/products` | Paginated catalog |
@@ -346,22 +425,47 @@ npm run dev                        # http://localhost:3000
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/auth/me` | Current user |
-| PATCH | `/api/auth/me` | Update phone number |
-| GET/POST/PUT/PATCH/DELETE | `/api/addresses/*` | Address book CRUD + set default |
+| PATCH | `/api/auth/me` | Update profile (phone number) |
+| GET | `/api/addresses` | List saved addresses |
+| POST | `/api/addresses` | Create address |
+| PUT | `/api/addresses/:id` | Update address |
+| PATCH | `/api/addresses/:id/default` | Set default address |
+| DELETE | `/api/addresses/:id` | Delete address |
 
 ### Customer only
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET/POST/PATCH/DELETE | `/api/cart/*` | Shopping cart |
-| POST | `/api/orders` | Place order |
-| GET | `/api/orders` | List own orders |
-| GET | `/api/orders/:orderNumber` | Order detail |
-| PATCH | `/api/orders/:orderNumber/cancel` | Self-cancel pending order |
+| GET | `/api/cart` | Current cart with line totals |
+| POST | `/api/cart/items` | Add product or increase quantity |
+| PATCH | `/api/cart/items/:productId` | Set quantity (`0` removes the line) |
+| DELETE | `/api/cart/items/:productId` | Remove line item |
+| POST | `/api/orders` | Place order from cart |
+| GET | `/api/orders` | List own orders (paginated; optional status filter) |
+| GET | `/api/orders/:orderNumber` | Own order detail |
+| PATCH | `/api/orders/:orderNumber/cancel` | Self-cancel while `PENDING` |
 
-### Admin only (`/api/admin/*`)
+### Admin only (`ADMIN` role)
 
-Dashboard stats, product CRUD + image upload, category CRUD, order management, customer management (enable/disable).
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/admin/dashboard-stats` | Product, order, customer, and sales totals |
+| GET | `/api/admin/products` | List products (admin filters/pagination) |
+| GET | `/api/admin/products/:id` | Product detail |
+| POST | `/api/admin/products` | Create product |
+| PUT | `/api/admin/products/:id` | Update product |
+| DELETE | `/api/admin/products/:id` | Delete product |
+| POST | `/api/admin/products/upload-image` | Upload product image to Supabase |
+| GET | `/api/admin/categories` | List categories |
+| POST | `/api/admin/categories` | Create category |
+| PUT | `/api/admin/categories/:id` | Update category |
+| DELETE | `/api/admin/categories/:id` | Delete category |
+| GET | `/api/admin/orders` | List orders |
+| GET | `/api/admin/orders/:orderNumber` | Order detail |
+| PATCH | `/api/admin/orders/:orderNumber/status` | Update order status |
+| GET | `/api/admin/customers` | List customers |
+| GET | `/api/admin/customers/:id` | Customer profile, orders, addresses |
+| PATCH | `/api/admin/customers/:id/status` | Enable/disable customer (disable revokes sessions) |
 
 See [`docs/`](docs/) for detailed feature documentation on each area.
 
@@ -372,10 +476,13 @@ See [`docs/`](docs/) for detailed feature documentation on each area.
 | Doc | Topic |
 |-----|-------|
 | [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Dated change log |
+| [`docs/deployment.md`](docs/deployment.md) | Render + Supabase production deploy |
 | [`docs/docker-local-dev.md`](docs/docker-local-dev.md) | Docker setup, seeding, troubleshooting |
 | [`docs/auth-sessions.md`](docs/auth-sessions.md) | Cookie auth, refresh rotation, rate limits |
+| [`docs/auth-email-verification.md`](docs/auth-email-verification.md) | Signup email verification |
 | [`docs/shopping-cart.md`](docs/shopping-cart.md) | DB-backed cart |
 | [`docs/checkout-orders.md`](docs/checkout-orders.md) | Checkout and order placement |
+| [`docs/order-emails.md`](docs/order-emails.md) | Brevo order / cancellation emails |
 | [`docs/user-profile.md`](docs/user-profile.md) | Account page, phone, address book |
 | [`docs/admin-dashboard.md`](docs/admin-dashboard.md) | Admin panel overview |
 | [`docs/product-listing.md`](docs/product-listing.md) | Catalog and product detail |
@@ -388,7 +495,7 @@ See [`docs/`](docs/) for detailed feature documentation on each area.
 - **No payment gateway** — payment method is stored as an enum label only.
 - **Supabase required** — server validates Supabase env vars at startup.
 - **Philippine locale** — phone numbers use `09XXXXXXXXX` format; addresses require barangay.
-- **Admin dashboard** — order/sales stat cards are placeholders; API currently returns product and customer counts only.
+- **Free-tier hosting** — Render cold starts and Supabase pause after idle can delay the first request.
 
 ---
 

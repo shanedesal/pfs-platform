@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-04 — README: live URLs, full API list, local setup
+
+- **Doc:** `README.md` (also see `docs/deployment.md`)
+- **What changed:** Documented production storefront/API links, expanded the API endpoint tables (auth verification, cart, addresses, admin), and clarified Docker/local getting-started steps. Deployment diagram uses the live API hostname.
+- **Files:** `README.md`, `docs/deployment.md`, `docs/CHANGELOG.md`
+
 ## 2026-08-04 — Fix checkout add-address nested form submit
 
 - **Doc:** `docs/checkout-orders.md`
