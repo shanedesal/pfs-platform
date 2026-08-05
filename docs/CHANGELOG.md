@@ -4,6 +4,12 @@ Project change log. Updated whenever feature documentation under `docs/` is adde
 
 Entries are newest first.
 
+## 2026-08-05 — Enable RLS on Supabase public app tables
+
+- **Doc:** `docs/supabase-rls.md`
+- **What changed:** Enabled Row-Level Security (no permissive policies) on all Prisma app tables so Supabase PostgREST anon/authenticated cannot access passwords, tokens, or other data. Grants to those roles are revoked when present. Applied via Prisma SQL migration (not dashboard-only SQL).
+- **Files:** `server/prisma/migrations/20260805000000_enable_rls_public_tables/`, `server/prisma/schema.prisma`, `docs/supabase-rls.md`, `docs/deployment.md`
+
 ## 2026-08-04 — README: live URLs, full API list, local setup
 
 - **Doc:** `README.md` (also see `docs/deployment.md`)

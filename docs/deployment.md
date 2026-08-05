@@ -53,6 +53,8 @@ flowchart LR
 
    > **Paused project:** Free Supabase projects pause after ~7 days idle. Dashboard → project → **Restore** if the database is paused.
 
+   > **Row-Level Security:** App tables in `public` have RLS enabled (deny for anon/authenticated) via Prisma migration — see [`docs/supabase-rls.md`](./supabase-rls.md). You do not need to toggle RLS in the Supabase dashboard; deploy runs `prisma migrate deploy`.
+
 ### 1b. Storage bucket for product images
 
 1. **Storage → New bucket**

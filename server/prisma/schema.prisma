@@ -1,3 +1,7 @@
+// App tables live in public. Supabase PostgREST exposure is locked down via
+// SQL migration `20260805000000_enable_rls_public_tables` (RLS on, no
+// anon/authenticated policies). Prisma cannot express RLS in this schema file;
+// when adding a new model, also ENABLE ROW LEVEL SECURITY in that migration.
 generator client {
   provider = "prisma-client-js"
 }
